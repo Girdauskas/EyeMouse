@@ -1,9 +1,7 @@
 ﻿using System.Drawing;
 
-namespace PrecisionGazeMouse.WarpPointers
-{
-    interface WarpPointer : System.IDisposable
-    {
+namespace PrecisionGazeMouse.WarpPointers {
+    interface WarpPointer : System.IDisposable {
         // Whether it's started tracking gaze
         bool IsStarted();
 
