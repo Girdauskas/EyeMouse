@@ -17,15 +17,15 @@ namespace PrecisionGazeMouse
     class GazeCalibrator
     {
         IKeyboardMouseEvents mouseGlobalHook;
-        WarpPointer warp;
+        IWarpPointer warp;
         MouseController controller;
         List<Event> events;
         bool saveCalibration = false;
 
-        public GazeCalibrator(MouseController controller, WarpPointer warp)
+        public GazeCalibrator(MouseController controller, IWarpPointer warp)
         {
-            this.controller = controller;
-            this.warp = warp;
+            controller = controller;
+            warp = warp;
             events = new List<Event>();
 
             if (saveCalibration)
@@ -45,7 +45,7 @@ namespace PrecisionGazeMouse
             if (controller.GetTrackingStatus() == "Running")
             {
                 Point curr = new Point(e.X, e.Y);
-                Point gaze = warp.calculateSmoothedPoint();
+                Point gaze = warp.CalculateSmoothedPoint();
                 Point d = Point.Subtract(gaze, new Size(curr));
 
                 Event evt = new Event() { time = System.DateTime.Now, location = curr, delta = d };

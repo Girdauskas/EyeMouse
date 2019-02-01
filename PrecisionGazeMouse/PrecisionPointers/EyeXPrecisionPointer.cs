@@ -21,7 +21,7 @@ namespace PrecisionGazeMouse.PrecisionPointers
         {
             mode = PrecisionPointerMode.ROTATION;
             samples = new Vector3[5];
-            this.sensitivity = sensitivity;
+            sensitivity = sensitivity;
             headPoseStream = Program.EyeXHost.Streams.CreateHeadPoseStream();
             if (headPoseStream != null)
             {
@@ -87,7 +87,7 @@ namespace PrecisionGazeMouse.PrecisionPointers
                     break;
                 case (PrecisionPointerMode.TRANSLATION):
                     /*
-                    trans = this.getTranslation();
+                    trans = getTranslation();
                     if (trans != null)
                     {
                         warpPoint.Offset(trans.x / 4, trans.y / 4);

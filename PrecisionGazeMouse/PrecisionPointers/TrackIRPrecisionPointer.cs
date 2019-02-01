@@ -33,9 +33,9 @@ namespace PrecisionGazeMouse.PrecisionPointers
 
         public TrackIRPrecisionPointer(PrecisionPointerMode mode, int sensitivity)
         {
-            this.mode = mode;
+            mode = mode;
             trackIRclient = new TrackIRUnity.TrackIRClient();  // Create an instance of the TrackerIR Client to get data from.
-            this.sensitivity = sensitivity;
+            sensitivity = sensitivity;
             if (trackIRclient != null)
             {
                 string status = trackIRclient.TrackIR_Enhanced_Init();
@@ -98,7 +98,7 @@ namespace PrecisionGazeMouse.PrecisionPointers
             switch (mode)
             {
                 case (PrecisionPointerMode.ROTATION):
-                    rot = this.getRotation();
+                    rot = getRotation();
                     if (rot != null)
                     {
                         double basePitch = (warpPoint.Y - screenSize.Height / 2.0) / (screenSize.Height / 2.0) * 200.0;
@@ -113,7 +113,7 @@ namespace PrecisionGazeMouse.PrecisionPointers
                     }
                     break;
                 case (PrecisionPointerMode.TRANSLATION):
-                    trans = this.getTranslation();
+                    trans = getTranslation();
                     if (trans != null)
                     {
                         warpPoint.Offset((int)(trans.x / 1.5), (int)(trans.y / 1.5));
@@ -121,12 +121,12 @@ namespace PrecisionGazeMouse.PrecisionPointers
                     }
                     break;
                 case (PrecisionPointerMode.BOTH):
-                    trans = this.getTranslation();
+                    trans = getTranslation();
                     if (trans != null)
                     {
                         warpPoint.Offset((int)(trans.x / 1.5), 0); // set y to zero because translating head/up down is difficult, and it throws off the rotation
                     }
-                    rot = this.getRotation();
+                    rot = getRotation();
                     if (rot != null)
                     {
                         double basePitch = (warpPoint.Y - screenSize.Height / 2.0) / (screenSize.Height / 2.0) * 200.0;

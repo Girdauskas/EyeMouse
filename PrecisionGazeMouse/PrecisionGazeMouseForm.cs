@@ -136,7 +136,7 @@ namespace PrecisionGazeMouse
         private void RefreshScreen(Object o, EventArgs e)
         {
             controller.UpdateMouse(Cursor.Position);
-            this.Invalidate();
+            Invalidate();
             overlay.Invalidate();
         }
 
@@ -160,7 +160,7 @@ namespace PrecisionGazeMouse
 
         private void QuitButton_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void eViacamPrompt(bool enabled)
@@ -291,7 +291,7 @@ namespace PrecisionGazeMouse
 
         private void PrecisionGazeMouseForm_Resize(object sender, EventArgs e)
         {
-            if (this.WindowState == FormWindowState.Minimized)
+            if (WindowState == FormWindowState.Minimized)
             {
                 Hide();
                 notifyIcon.Visible = true;
@@ -301,7 +301,7 @@ namespace PrecisionGazeMouse
         private void notifyIcon_Click(object sender, EventArgs e)
         {
             Show();
-            this.WindowState = FormWindowState.Normal;
+            WindowState = FormWindowState.Normal;
             notifyIcon.Visible = false;
         }
 

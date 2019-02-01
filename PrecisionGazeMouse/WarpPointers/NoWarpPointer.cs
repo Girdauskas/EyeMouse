@@ -2,18 +2,18 @@
 using System.Drawing;
 
 namespace PrecisionGazeMouse.WarpPointers {
-    class NoWarpPointer : WarpPointer {
-        Point warpPoint;
-        bool warpToInitialPoint;
+    class NoWarpPointer : IWarpPointer {
+        private Point _warpPoint;
+        private readonly bool _warpToInitialPoint;
 
         public NoWarpPointer() {
-            this.warpPoint = new Point(0, 0);
-            this.warpToInitialPoint = false;
+            _warpPoint = new Point(0, 0);
+            _warpToInitialPoint = false;
         }
 
         public NoWarpPointer(Point warpPoint) {
-            this.warpPoint = warpPoint;
-            this.warpToInitialPoint = true;
+            _warpPoint = warpPoint;
+            _warpToInitialPoint = true;
         }
 
         public bool IsStarted() {
@@ -24,35 +24,36 @@ namespace PrecisionGazeMouse.WarpPointers {
             return true;
         }
 
-        public Point calculateSmoothedPoint() {
-            return warpPoint;
+        public Point CalculateSmoothedPoint() {
+            return _warpPoint;
         }
 
         public override String ToString() {
-            return String.Format("({0:0}, {1:0})", warpPoint.X, warpPoint.Y);
+            return $"({_warpPoint.X:0}, {_warpPoint.Y:0})";
         }
 
         public Point GetGazePoint() {
-            return warpPoint;
+            return _warpPoint;
         }
 
         public int GetSampleCount() {
             return 1;
         }
 
-        public int GetWarpTreshold() {
+        public int GetWarpThreshold() {
             return 0;
         }
 
         public Point GetWarpPoint() {
-            return warpPoint;
+            return _warpPoint;
         }
 
         public Point GetNextPoint(Point currentPoint) {
-            if (warpToInitialPoint)
-                return warpPoint;
-            else
+            if (_warpToInitialPoint) {
+                return _warpPoint;
+            } else {
                 return currentPoint;
+            }
         }
 
         public void Dispose() {}

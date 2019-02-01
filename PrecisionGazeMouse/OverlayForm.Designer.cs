@@ -28,24 +28,24 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            SuspendLayout();
             // 
             // OverlayForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Lime;
-            this.ClientSize = new System.Drawing.Size(1, 1);
-            this.DoubleBuffered = true;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Name = "OverlayForm";
-            this.ShowIcon = false;
-            this.ShowInTaskbar = false;
-            this.Text = "OverlayForm";
-            this.TopMost = true;
-            this.TransparencyKey = System.Drawing.Color.Lime;
-            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            BackColor = System.Drawing.Color.Lime;
+            ClientSize = new System.Drawing.Size(1, 1);
+            DoubleBuffered = true;
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            Name = "OverlayForm";
+            ShowIcon = false;
+            ShowInTaskbar = false;
+            Text = "OverlayForm";
+            TopMost = true;
+            TransparencyKey = System.Drawing.Color.Lime;
+            WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            ResumeLayout(false);
 
         }
 

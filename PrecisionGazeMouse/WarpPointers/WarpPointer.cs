@@ -1,32 +1,54 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 
 namespace PrecisionGazeMouse.WarpPointers {
-    interface WarpPointer : System.IDisposable {
-        // Whether it's started tracking gaze
+    public interface IWarpPointer : IDisposable {
+        /// <summary>
+        ///  Whether it's started tracking gaze.
+        /// </summary>
         bool IsStarted();
 
-        // Whether it's ready to warp to a new point
+        /// <summary>
+        /// Whether it's ready to warp to a new point.
+        /// </summary>
+        /// <returns></returns>
         bool IsWarpReady();
 
-        // Smoothed point for drawing
-        Point calculateSmoothedPoint();
+        /// <summary>
+        ///  Smoothed point for drawing
+        /// </summary>
+        Point CalculateSmoothedPoint();
 
-        // Gaze point for drawing
+        /// <summary>
+        /// Gaze point for drawing.
+        /// </summary>
+        /// <returns></returns>
         Point GetGazePoint();
 
-        // Sample count for printing
+        /// <summary>
+        /// Sample count for printing.
+        /// </summary>
+        /// <returns></returns>
         int GetSampleCount();
 
-        // Warp threshold in pixels
-        int GetWarpTreshold();
+        /// <summary>
+        /// Warp threshold in pixels
+        /// </summary>
+        int GetWarpThreshold();
 
-        // Warp point for drawing, no update made
+        /// <summary>
+        /// Warp point for drawing, no update made
+        /// </summary>
         Point GetWarpPoint();
 
-        // Get the next warp point based on the current pointer location and gaze
+        /// <summary>
+        /// Get the next warp point based on the current pointer location and gaze.
+        /// </summary>
         Point GetNextPoint(Point currentPoint);
 
-        // Refresh the tracking buffer for a fresh start
+        /// <summary>
+        /// Refresh the tracking buffer for a fresh start.
+        /// </summary>
         void RefreshTracking();
     }
 }

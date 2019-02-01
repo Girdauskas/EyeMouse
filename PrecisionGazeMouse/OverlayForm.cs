@@ -33,9 +33,9 @@ namespace PrecisionGazeMouse
         public OverlayForm(MouseController controller)
         {
             InitializeComponent();
-            SetWindowPos(this.Handle, HWND_TOPMOST, 0, 0, 0, 0, (SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW));
+            SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, (SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW));
 
-            this.controller = controller;
+            controller = controller;
         }
 
         public bool ShowWarpBar
@@ -64,7 +64,7 @@ namespace PrecisionGazeMouse
             Rectangle rec;
 
             // Skip if no warp to paint
-            int threshold = controller.WarpPointer.GetWarpTreshold();
+            int threshold = controller.WarpPointer.GetWarpThreshold();
             if (threshold == 0)
                 return;
 

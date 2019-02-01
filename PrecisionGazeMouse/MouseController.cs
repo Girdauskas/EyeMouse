@@ -11,7 +11,7 @@ namespace PrecisionGazeMouse
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        WarpPointer warp;
+        IWarpPointer warp;
         PrecisionPointer prec;
         Point finalPoint;
         DateTime pauseTime;
@@ -78,12 +78,12 @@ namespace PrecisionGazeMouse
 
         public MouseController(PrecisionGazeMouseForm form)
         {
-            this.form = form;
+            form = form;
         }
 
         public void setMovement(Movement movement)
         {
-            this.movement = movement;
+            movement = movement;
         }
 
         public void setMode(Mode mode)
@@ -94,7 +94,7 @@ namespace PrecisionGazeMouse
             if (prec != null)
                 prec.Dispose();
 
-            this.mode = mode;
+            mode = mode;
             switch(mode)
             {
                 case Mode.EYEX_AND_EVIACAM:
@@ -262,7 +262,7 @@ namespace PrecisionGazeMouse
             clickHotKeyDown = false;
         }
 
-        public WarpPointer WarpPointer
+        public IWarpPointer WarpPointer
         {
             get { return warp; }
         }

@@ -1,9 +1,4 @@
-﻿//-----------------------------------------------------------------------
-// Copyright 2014 Tobii Technology AB. All rights reserved.
-//-----------------------------------------------------------------------
-
-namespace PrecisionGazeMouse
-{
+﻿namespace PrecisionGazeMouse {
     using System;
     using System.Diagnostics;
     using System.Reflection;
@@ -12,34 +7,20 @@ namespace PrecisionGazeMouse
     using System.Windows.Forms;
     using Tobii.Interaction;
 
-    static class Program
-    {
-        private static Host _eyeXHost = new Host();
-
+    static class Program {
         /// <summary>
         /// Gets the singleton EyeX host instance.
         /// </summary>
-        public static Host EyeXHost
-        {
-            get { return _eyeXHost; }
-        }
+        public static Host EyeXHost { get; } = new Host();
 
-        private static void CurrentDomain_UnhandledException(Object sender, UnhandledExceptionEventArgs e)
-        {
-            try
-            {
+        private static void CurrentDomain_UnhandledException(Object sender, UnhandledExceptionEventArgs e) {
+            try {
                 Exception ex = (Exception)e.ExceptionObject;
                 MessageBox.Show("Unhandled domain exception:\n\n" + ex.Message);
-            }
-            catch (Exception exc)
-            {
-                try
-                {
-                    MessageBox.Show("Fatal exception happend inside UnhandledExceptionHandler: \n\n"
-                        + exc.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                }
-                finally
-                {
+            } catch (Exception exc) {
+                try {
+                    MessageBox.Show("Fatal exception happend inside UnhandledExceptionHandler: \n\n" + exc.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                } finally {
                     Application.Exit();
                 }
             }
@@ -47,21 +28,13 @@ namespace PrecisionGazeMouse
             // It should terminate our main thread so Application.Exit() is unnecessary here
         }
 
-        private static void UIThreadException(object sender, ThreadExceptionEventArgs t)
-        {
-            try
-            {
+        private static void UIThreadException(object sender, ThreadExceptionEventArgs t) {
+            try {
                 MessageBox.Show("Unhandled exception catched.\n Application is going to close now.");
-            }
-            catch
-            {
-                try
-                {
-                    MessageBox.Show("Fatal exception happend inside UIThreadException handler",
-                        "Fatal Windows Forms Error", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Stop);
-                }
-                finally
-                {
+            } catch {
+                try {
+                    MessageBox.Show("Fatal exception happend inside UIThreadException handler", "Fatal Windows Forms Error", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Stop);
+                } finally {
                     Application.Exit();
                 }
             }
@@ -70,45 +43,40 @@ namespace PrecisionGazeMouse
             Application.Exit();
         }
 
-        
-        private static bool IsRunAsAdministrator()
-        {
+
+        private static bool IsRunAsAdministrator() {
             var wi = WindowsIdentity.GetCurrent();
             var wp = new WindowsPrincipal(wi);
 
             return wp.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
-        public static void StartApp()
-        {
-            _eyeXHost.InitializeWpfAgent();
+        public static void StartApp() {
+            EyeXHost.InitializeWpfAgent();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new PrecisionGazeMouseForm());
 
-            _eyeXHost.Dispose();
+            EyeXHost.Dispose();
         }
 
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
-        {
-            
+        static void Main() {
             // Add handler for UI thread exceptions
-            Application.ThreadException += new ThreadExceptionEventHandler(UIThreadException);
+            Application.ThreadException += UIThreadException;
 
             // Force all WinForms errors to go through handler
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
 
             // This handler is for catching non-UI thread exceptions
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             // Try to switch to admin role
-            if (!IsRunAsAdministrator())
-            {
+            if (!IsRunAsAdministrator()) {
                 // It is not possible to launch a ClickOnce app as administrator directly, so instead we launch the
                 // app as administrator in a new process.
                 var processInfo = new ProcessStartInfo(Assembly.GetExecutingAssembly().CodeBase);
@@ -118,19 +86,14 @@ namespace PrecisionGazeMouse
                 processInfo.Verb = "runas";
 
                 // Start the new process
-                try
-                {
+                try {
                     Process.Start(processInfo);
-                }
-                catch (Exception)
-                {
+                } catch (Exception) {
                     // The user did not allow the application to run as administrator
                     MessageBox.Show("Warning: If you don't run with Administrator permissions, the gaze mouse will stop working when an Administrator window is selected.");
                     StartApp();
                 }
-            }
-            else
-            {
+            } else {
                 StartApp();
             }
         }
