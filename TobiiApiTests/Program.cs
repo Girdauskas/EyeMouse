@@ -170,20 +170,7 @@ namespace TobiiApiTests {
                 }
             });
 
-
-            //var keyboardHook = new Hook("test");
-
-
-            //keyboardHook.KeyDownEvent += eventArgs => {
-
-
-            //    Console.WriteLine(eventArgs.Key);
-            //};
-
-            // Starting pumping. Otherwise global mouse/keyboard event won't arrive.
             Application.Run();
-
-            /* SimMouse.Act(SimMouse.Action.MoveOnly, 0, 0);*/
         }
     }
 }
