@@ -77,7 +77,8 @@ namespace EyeMouse {
 
                 if (args.KeyCode == ScrollingModeHotkey) {
                     if (_isScrollingModeEnabled == false) {
-                        _scrollingModeStartPoint = Control.MousePosition;
+                        SimMouse.Act(SimMouse.Action.MoveOnly, (int)_actualGazePointX, (int)_actualGazePointY);
+                        _scrollingModeStartPoint = new Point((int)_actualGazePointX, (int)_actualGazePointY);
                         _isScrollingModeEnabled = true;
 
                         // Enabling eViacam.
