@@ -19,7 +19,7 @@ namespace EyeMouse {
         private static bool _isRightMouseButtonPressed;
 
         private const Keys ActivationHotkey = Keys.F3;
-        private const Keys EViacamEnableDisableKey = Keys.F11;
+        private const Keys EViacamEnableDisableKey = Keys.Scroll;
 
         private const Keys LeftMouseButtonHotkey = Keys.F2;
         private const Keys RightMouseButtonHotkey = Keys.F4;
@@ -142,17 +142,17 @@ namespace EyeMouse {
                         var deltaY = Control.MousePosition.Y - _scrollingModeStartPoint.Y;
 
                         if (Math.Abs(deltaY) > 10) {
-                            sleepBetweenScrolls = 150;
+                            sleepBetweenScrolls = 200;
 
                             if (Math.Abs(deltaY) > 20) {
+                                sleepBetweenScrolls = 150;
+                            }
+
+                            if (Math.Abs(deltaY) > 40) {
                                 sleepBetweenScrolls = 100;
                             }
 
                             if (Math.Abs(deltaY) > 100) {
-                                sleepBetweenScrolls = 50;
-                            }
-
-                            if (Math.Abs(deltaY) > 200) {
                                 sleepBetweenScrolls = 25;
                             }
 
