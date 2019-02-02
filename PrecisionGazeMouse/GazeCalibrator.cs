@@ -1,58 +1,51 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 using Gma.System.MouseKeyHook;
 using System.IO;
 using PrecisionGazeMouse.WarpPointers;
 
-namespace PrecisionGazeMouse
-{
-    public struct Event
-    {
-        public System.DateTime time;
-        public Point location;
-        public Point delta;
+namespace PrecisionGazeMouse {
+    public struct Event {
+        public DateTime Time;
+        public Point Location;
+        public Point Delta;
     }
 
-    class GazeCalibrator
-    {
-        IKeyboardMouseEvents mouseGlobalHook;
-        IWarpPointer warp;
-        MouseController controller;
-        List<Event> events;
-        bool saveCalibration = false;
+    class GazeCalibrator {
+        private readonly IKeyboardMouseEvents _mouseGlobalHook;
+        private readonly IWarpPointer _warp;
+        private readonly MouseController _controller;
+        private readonly List<Event> _events;
+        private readonly bool _saveCalibration = false;
 
-        public GazeCalibrator(MouseController controller, IWarpPointer warp)
-        {
-            controller = controller;
-            warp = warp;
-            events = new List<Event>();
+        public GazeCalibrator(MouseController controller, IWarpPointer warp) {
+            _controller = controller;
+            _warp = warp;
+            _events = new List<Event>();
 
-            if (saveCalibration)
-            {
-                mouseGlobalHook = Hook.GlobalEvents();
-                mouseGlobalHook.MouseDownExt += GlobalHookMouseDownExt;
+            if (_saveCalibration) {
+                _mouseGlobalHook = Hook.GlobalEvents();
+                _mouseGlobalHook.MouseDownExt += GlobalHookMouseDownExt;
             }
         }
 
-        public List<Event> GetEvents()
-        {
-            return events;
+        public List<Event> GetEvents() {
+            return _events;
         }
 
-        private void GlobalHookMouseDownExt(object sender, MouseEventExtArgs e)
-        {
-            if (controller.GetTrackingStatus() == "Running")
-            {
-                Point curr = new Point(e.X, e.Y);
-                Point gaze = warp.CalculateSmoothedPoint();
-                Point d = Point.Subtract(gaze, new Size(curr));
+        private void GlobalHookMouseDownExt(object sender, MouseEventExtArgs e) {
+            if (_controller.GetTrackingStatus() == "Running") {
+                var curr = new Point(e.X, e.Y);
+                var gaze = _warp.CalculateSmoothedPoint();
+                var d = Point.Subtract(gaze, new Size(curr));
 
-                Event evt = new Event() { time = System.DateTime.Now, location = curr, delta = d };
-                events.Add(evt);
-                
+                var evt = new Event() { Time = DateTime.Now, Location = curr, Delta = d };
+                _events.Add(evt);
+
                 var csv = new StringBuilder();
-                var newLine = string.Format("{0},{1},{2},{3},{4}", System.DateTime.Now, curr.X, curr.Y, d.X, d.Y);
+                var newLine = $"{DateTime.Now},{curr.X},{curr.Y},{d.X},{d.Y}";
                 csv.AppendLine(newLine);
                 File.AppendAllText("CalibrationData.csv", csv.ToString());
             }

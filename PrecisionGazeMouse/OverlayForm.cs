@@ -100,10 +100,10 @@ namespace PrecisionGazeMouse
             List<Event> events = controller.GazeCalibrator.GetEvents();
             foreach (Event evt in events)
             {
-                p = evt.location;
+                p = evt.Location;
                 rec = new Rectangle(p.X - 5, p.Y - 5, 10, 10);
                 e.Graphics.FillRectangle(Brushes.Blue, rec);
-                e.Graphics.DrawLine(Pens.Blue, p, Point.Add(p, new Size(evt.delta)));
+                e.Graphics.DrawLine(Pens.Blue, p, Point.Add(p, new Size(evt.Delta)));
             }
         }
     }

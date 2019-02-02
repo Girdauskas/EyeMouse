@@ -5,23 +5,20 @@ using PrecisionGazeMouse.WarpPointers;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
-namespace PrecisionGazeMouse
-{
-    class MouseController
-    {
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+namespace PrecisionGazeMouse {
+    class MouseController {
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        IWarpPointer warp;
-        PrecisionPointer prec;
-        Point finalPoint;
-        DateTime pauseTime;
-        Point lastCursorPosition;
-        GazeCalibrator calibrator;
-        PrecisionGazeMouseForm form;
-        bool updatedAtLeastOnce;
+        private IWarpPointer _warp;
+        private PrecisionPointer _prec;
+        private Point _finalPoint;
+        private DateTime _pauseTime;
+        private Point _lastCursorPosition;
+        private GazeCalibrator _calibrator;
+        private readonly PrecisionGazeMouseForm _form;
+        private bool _updatedAtLeastOnce;
 
-        public enum Mode
-        {
+        public enum Mode {
             EYEX_AND_EVIACAM,
             EYEX_AND_TRACKIR,
             EYEX_AND_SMARTNAV,
@@ -29,14 +26,15 @@ namespace PrecisionGazeMouse
             TRACKIR_ONLY,
             EVIACAM_ONLY
         };
-        Mode mode;
 
-        public enum Movement
-        {
+        private Mode _mode;
+
+        public enum Movement {
             CONTINUOUS,
             HOTKEY
         };
-        Movement movement;
+
+        private Movement _movement;
         bool movementHotKeyDown = false;
 
         bool clickHotKeyDown = false;
@@ -45,215 +43,191 @@ namespace PrecisionGazeMouse
         Point? lastClick;
         bool pauseMode = false;
 
-        enum TrackingState
-        {
+        enum TrackingState {
             STARTING,
             PAUSED,
             RUNNING,
             ERROR
         };
+
         TrackingState state;
 
         int sensitivity;
-        public int Sensitivity
-        {
+        public int Sensitivity {
             get { return sensitivity; }
-            set
-            {
+            set {
                 sensitivity = value;
-                if (prec != null)
-                {
-                    prec.Sensitivity = value;
+                if (_prec != null) {
+                    _prec.Sensitivity = value;
                 }
             }
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
+
         //Mouse actions
         private const int MOUSEEVENTF_LEFTDOWN = 0x02;
         private const int MOUSEEVENTF_LEFTUP = 0x04;
         private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
         private const int MOUSEEVENTF_RIGHTUP = 0x10;
 
-        public MouseController(PrecisionGazeMouseForm form)
-        {
-            form = form;
+        public MouseController(PrecisionGazeMouseForm form) {
+            _form = form;
         }
 
-        public void setMovement(Movement movement)
-        {
-            movement = movement;
+        public void setMovement(Movement movement) {
+            _movement = movement;
         }
 
-        public void setMode(Mode mode)
-        {
-            log.Debug($"Setting mode to {mode}");
-            if (warp != null)
-                warp.Dispose();
-            if (prec != null)
-                prec.Dispose();
+        public void setMode(Mode mode) {
+            Log.Debug($"Setting mode to {mode}");
+            if (_warp != null)
+                _warp.Dispose();
+            if (_prec != null)
+                _prec.Dispose();
 
-            mode = mode;
-            switch(mode)
-            {
+            _mode = mode;
+            switch (mode) {
                 case Mode.EYEX_AND_EVIACAM:
-                    warp = new EyeXWarpPointer();
-                    prec = new NoPrecisionPointer();
-                    log.Debug("State change to running");
+                    _warp = new EyeXWarpPointer();
+                    _prec = new NoPrecisionPointer();
+                    Log.Debug("State change to running");
                     state = TrackingState.RUNNING;
                     break;
                 case Mode.EYEX_AND_TRACKIR:
-                    warp = new EyeXWarpPointer();
-                    prec = new TrackIRPrecisionPointer(PrecisionPointerMode.ROTATION, sensitivity);
+                    _warp = new EyeXWarpPointer();
+                    _prec = new TrackIRPrecisionPointer(PrecisionPointerMode.ROTATION, sensitivity);
                     break;
                 case Mode.EYEX_AND_SMARTNAV:
-                    warp = new EyeXWarpPointer();
-                    prec = new NoPrecisionPointer();
-                    log.Debug("State change to running");
+                    _warp = new EyeXWarpPointer();
+                    _prec = new NoPrecisionPointer();
+                    Log.Debug("State change to running");
                     state = TrackingState.RUNNING;
                     break;
                 case Mode.TRACKIR_ONLY:
-                    warp = new NoWarpPointer(getScreenCenter());
-                    prec = new TrackIRPrecisionPointer(PrecisionPointerMode.BOTH, sensitivity);
+                    _warp = new NoWarpPointer(getScreenCenter());
+                    _prec = new TrackIRPrecisionPointer(PrecisionPointerMode.BOTH, sensitivity);
                     break;
                 case Mode.EYEX_ONLY:
-                    warp = new EyeXWarpPointer();
-                    prec = new EyeXPrecisionPointer(sensitivity);
+                    _warp = new EyeXWarpPointer();
+                    _prec = new EyeXPrecisionPointer(sensitivity);
                     break;
                 case Mode.EVIACAM_ONLY:
-                    warp = new NoWarpPointer();
-                    prec = new NoPrecisionPointer();
-                    log.Debug("State change to running");
+                    _warp = new NoWarpPointer();
+                    _prec = new NoPrecisionPointer();
+                    Log.Debug("State change to running");
                     state = TrackingState.RUNNING;
                     break;
             }
 
-            calibrator = new GazeCalibrator(this, warp);
+            _calibrator = new GazeCalibrator(this, _warp);
 
-            if (!warp.IsStarted())
-            {
-                log.Debug("State change to error");
+            if (!_warp.IsStarted()) {
+                Log.Debug("State change to error");
                 state = TrackingState.ERROR;
             }
 
-            if (!prec.IsStarted())
-            {
-                log.Debug("State change to error");
+            if (!_prec.IsStarted()) {
+                Log.Debug("State change to error");
                 state = TrackingState.ERROR;
             }
         }
-        
-        public void MovementHotKeyDown()
-        {
-            if (movement != Movement.HOTKEY || state == TrackingState.ERROR || state == TrackingState.PAUSED)
+
+        public void MovementHotKeyDown() {
+            if (_movement != Movement.HOTKEY || state == TrackingState.ERROR || state == TrackingState.PAUSED)
                 return;
 
-            log.Debug("Movement key down");
-            if (!movementHotKeyDown)
-            {
-                if (!dragging)
-                {
-                    if (mode == Mode.EYEX_AND_EVIACAM || mode == Mode.EVIACAM_ONLY)
-                    {
-                        log.Debug("Pressing eViacam key");
+            Log.Debug("Movement key down");
+            if (!movementHotKeyDown) {
+                if (!dragging) {
+                    if (_mode == Mode.EYEX_AND_EVIACAM || _mode == Mode.EVIACAM_ONLY) {
+                        Log.Debug("Pressing eViacam key");
                         SendKeys.Send("{" + Properties.Settings.Default.eViacamKey + "}"); // trigger eViacam to start tracking
                     }
-                    warp.RefreshTracking();
-                    log.Debug("State change to starting");
+
+                    _warp.RefreshTracking();
+                    Log.Debug("State change to starting");
                     state = TrackingState.STARTING;
-                    updatedAtLeastOnce = false;
+                    _updatedAtLeastOnce = false;
                 }
             }
 
             movementHotKeyDown = true;
         }
 
-        public void PauseHotKeyDown()
-        {
-            log.Debug("Pause key down");
-            if (pauseMode)
-            {
+        public void PauseHotKeyDown() {
+            Log.Debug("Pause key down");
+            if (pauseMode) {
                 pauseMode = false;
-                if (state != TrackingState.ERROR)
-                {
-                    warp.RefreshTracking();
-                    log.Debug("State change to starting");
+                if (state != TrackingState.ERROR) {
+                    _warp.RefreshTracking();
+                    Log.Debug("State change to starting");
                     state = TrackingState.STARTING;
-                    updatedAtLeastOnce = false;
+                    _updatedAtLeastOnce = false;
                 }
-            } else
-            {
+            } else {
                 pauseMode = true;
-                if (state == TrackingState.STARTING || state == TrackingState.RUNNING)
-                {
-                    log.Debug("State change to paused");
+                if (state == TrackingState.STARTING || state == TrackingState.RUNNING) {
+                    Log.Debug("State change to paused");
                     state = TrackingState.PAUSED;
                 }
             }
         }
 
-        public void MovementHotKeyUp()
-        {
+        public void MovementHotKeyUp() {
             if (state == TrackingState.ERROR || state == TrackingState.PAUSED)
                 return;
 
-            log.Debug("Movement key up");
+            Log.Debug("Movement key up");
             movementHotKeyDown = false;
 
-            if (movement == Movement.HOTKEY && (mode == Mode.EYEX_AND_EVIACAM || mode == Mode.EVIACAM_ONLY))
-            {
-                log.Debug("Pressing eViacam key");
+            if (_movement == Movement.HOTKEY && (_mode == Mode.EYEX_AND_EVIACAM || _mode == Mode.EVIACAM_ONLY)) {
+                Log.Debug("Pressing eViacam key");
                 SendKeys.Send("{" + Properties.Settings.Default.eViacamKey + "}"); // trigger eViacam to stop tracking
             }
         }
 
-        public void ClickHotKeyDown()
-        {
+        public void ClickHotKeyDown() {
             if (state == TrackingState.ERROR || state == TrackingState.PAUSED)
                 return;
 
-            log.Debug("Click key down");
-            if (!clickHotKeyDown)
-            {
-                if (!dragging && movementHotKeyDown && timeSinceClickKeyUp != null && System.DateTime.Now.Subtract(timeSinceClickKeyUp.Value).TotalMilliseconds < 250)
-                {
+            Log.Debug("Click key down");
+            if (!clickHotKeyDown) {
+                if (!dragging && movementHotKeyDown && timeSinceClickKeyUp != null && DateTime.Now.Subtract(timeSinceClickKeyUp.Value).TotalMilliseconds < 250) {
                     // it's a drag so click down and hold
                     uint X = (uint)lastClick.Value.X;
                     uint Y = (uint)lastClick.Value.Y;
                     mouse_event(MOUSEEVENTF_LEFTDOWN, X, Y, 0, 0);
                     dragging = true;
-                    log.Debug("Dragging mouse");
+                    Log.Debug("Dragging mouse");
                 }
             }
+
             clickHotKeyDown = true;
         }
 
-        public void ClickHotKeyUp()
-        {
+        public void ClickHotKeyUp() {
             if (state == TrackingState.ERROR || state == TrackingState.PAUSED)
                 return;
 
-            log.Debug("Movement key up");
+            Log.Debug("Movement key up");
 
             uint X = (uint)Cursor.Position.X;
             uint Y = (uint)Cursor.Position.Y;
 
-            if (dragging)
-            {
+            if (dragging) {
                 mouse_event(MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
                 dragging = false;
-                log.Debug("Stopped dragging");
-            }
-            else
-            {
-                if (timeSinceClickKeyUp != null && System.DateTime.Now.Subtract(timeSinceClickKeyUp.Value).TotalMilliseconds < 500)
-                {
+                Log.Debug("Stopped dragging");
+            } else {
+                if (timeSinceClickKeyUp != null && System.DateTime.Now.Subtract(timeSinceClickKeyUp.Value).TotalMilliseconds < 500) {
                     // it's a double click so use the original click position
                     X = (uint)lastClick.Value.X;
                     Y = (uint)lastClick.Value.Y;
-                    log.Debug("Double click");
+                    Log.Debug("Double click");
                 }
+
                 mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
                 lastClick = Cursor.Position;
             }
@@ -262,30 +236,24 @@ namespace PrecisionGazeMouse
             clickHotKeyDown = false;
         }
 
-        public IWarpPointer WarpPointer
-        {
-            get { return warp; }
+        public IWarpPointer WarpPointer {
+            get { return _warp; }
         }
 
-        public PrecisionPointer PrecisionPointer
-        {
-            get { return prec; }
+        public PrecisionPointer PrecisionPointer {
+            get { return _prec; }
         }
 
-        public Point GetFinalPoint()
-        {
-            return finalPoint;
+        public Point GetFinalPoint() {
+            return _finalPoint;
         }
 
-        public GazeCalibrator GazeCalibrator
-        {
-            get { return calibrator; }
+        public GazeCalibrator GazeCalibrator {
+            get { return _calibrator; }
         }
 
-        public String GetTrackingStatus()
-        {
-            switch (state)
-            {
+        public String GetTrackingStatus() {
+            switch (state) {
                 case TrackingState.STARTING:
                     return "Starting";
                 case TrackingState.RUNNING:
@@ -293,88 +261,82 @@ namespace PrecisionGazeMouse
                 case TrackingState.PAUSED:
                     return "Paused";
                 case TrackingState.ERROR:
-                    if (!warp.IsStarted())
+                    if (!_warp.IsStarted())
                         return "No EyeX connection";
-                    if (!prec.IsStarted())
+                    if (!_prec.IsStarted())
                         return "No TrackIR connection";
                     return "Error";
             }
+
             return "";
         }
 
-        public void UpdateMouse(Point currentPoint)
-        {
-            switch (state)
-            {
+        public void UpdateMouse(Point currentPoint) {
+            switch (state) {
                 case TrackingState.STARTING:
-                    if (warp.IsWarpReady())
-                    {
-                        log.Debug("State change to running");
+                    if (_warp.IsWarpReady()) {
+                        Log.Debug("State change to running");
                         state = TrackingState.RUNNING;
-                        finalPoint = currentPoint;
+                        _finalPoint = currentPoint;
                     }
+
                     break;
                 case TrackingState.RUNNING:
-                    if(movement == Movement.HOTKEY)
-                    {
-                        if (updatedAtLeastOnce && !movementHotKeyDown)
+                    if (_movement == Movement.HOTKEY) {
+                        if (_updatedAtLeastOnce && !movementHotKeyDown)
                             break;
                     }
-                    Point warpPoint = warp.GetNextPoint(currentPoint);
-                    if (mode == Mode.EYEX_AND_SMARTNAV || mode == Mode.EYEX_AND_EVIACAM || mode == Mode.EVIACAM_ONLY)
-                    {
+
+                    Point warpPoint = _warp.GetNextPoint(currentPoint);
+                    if (_mode == Mode.EYEX_AND_SMARTNAV || _mode == Mode.EYEX_AND_EVIACAM || _mode == Mode.EVIACAM_ONLY) {
                         warpPoint = limitToScreenBounds(warpPoint);
-                        if (warpPoint != finalPoint)
-                        {
-                            finalPoint = warpPoint;
-                            form.SetMousePosition(finalPoint);
+                        if (warpPoint != _finalPoint) {
+                            _finalPoint = warpPoint;
+                            _form.SetMousePosition(_finalPoint);
                         }
-                    }
-                    else
-                    {
-                        if (PrecisionGazeMouseForm.MousePosition != finalPoint)
-                        {
-                            log.Debug("State change to paused");
+                    } else {
+                        if (PrecisionGazeMouseForm.MousePosition != _finalPoint) {
+                            Log.Debug("State change to paused");
                             state = TrackingState.PAUSED;
-                            pauseTime = System.DateTime.Now;
+                            _pauseTime = DateTime.Now;
                         }
-                        finalPoint = prec.GetNextPoint(warpPoint);
-                        finalPoint = limitToScreenBounds(finalPoint);
-                        form.SetMousePosition(finalPoint);
+
+                        _finalPoint = _prec.GetNextPoint(warpPoint);
+                        _finalPoint = limitToScreenBounds(_finalPoint);
+                        _form.SetMousePosition(_finalPoint);
                     }
-                    updatedAtLeastOnce = true;
+
+                    _updatedAtLeastOnce = true;
                     break;
                 case TrackingState.PAUSED:
                     // Keep pausing if the user is still moving the mouse
-                    if (lastCursorPosition != currentPoint)
-                    {
-                        lastCursorPosition = currentPoint;
-                        pauseTime = System.DateTime.Now;
+                    if (_lastCursorPosition != currentPoint) {
+                        _lastCursorPosition = currentPoint;
+                        _pauseTime = DateTime.Now;
                     }
-                    if (!pauseMode && System.DateTime.Now.CompareTo(pauseTime.AddSeconds(1)) > 0)
-                    {
-                        log.Debug("State change to starting");
+
+                    if (!pauseMode && DateTime.Now.CompareTo(_pauseTime.AddSeconds(1)) > 0) {
+                        Log.Debug("State change to starting");
                         state = TrackingState.STARTING;
                     }
+
                     break;
                 case TrackingState.ERROR:
-                    if (warp.IsStarted() && prec.IsStarted())
-                    {
-                        log.Debug("State change to starting");
+                    if (_warp.IsStarted() && _prec.IsStarted()) {
+                        Log.Debug("State change to starting");
                         state = TrackingState.STARTING;
                     }
+
                     break;
             }
         }
 
-        private Point getScreenCenter()
-        {
+        private Point getScreenCenter() {
             Rectangle screenSize = PrecisionGazeMouseForm.GetScreenSize();
             return new Point(screenSize.Width / 2, screenSize.Height / 2);
         }
 
-        private Point limitToScreenBounds(Point p)
-        {
+        private Point limitToScreenBounds(Point p) {
             Rectangle screenSize = PrecisionGazeMouseForm.GetScreenSize();
             int margin = 10;
 

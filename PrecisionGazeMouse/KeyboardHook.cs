@@ -4,60 +4,48 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 // example code from https://stackoverflow.com/questions/604410/global-keyboard-capture-in-c-sharp-application
-namespace PrecisionGazeMouse
-{
-    class GlobalKeyboardHookEventArgs : HandledEventArgs
-    {
+namespace PrecisionGazeMouse {
+    class GlobalKeyboardHookEventArgs : HandledEventArgs {
         public GlobalKeyboardHook.KeyboardState KeyboardState { get; private set; }
         public GlobalKeyboardHook.LowLevelKeyboardInputEvent KeyboardData { get; private set; }
 
-        public GlobalKeyboardHookEventArgs(
-            GlobalKeyboardHook.LowLevelKeyboardInputEvent keyboardData,
-            GlobalKeyboardHook.KeyboardState keyboardState)
-        {
+        public GlobalKeyboardHookEventArgs(GlobalKeyboardHook.LowLevelKeyboardInputEvent keyboardData, GlobalKeyboardHook.KeyboardState keyboardState) {
             KeyboardData = keyboardData;
             KeyboardState = keyboardState;
         }
     }
 
     //Based on https://gist.github.com/Stasonix
-    class GlobalKeyboardHook : IDisposable
-    {
+    class GlobalKeyboardHook : IDisposable {
         public event EventHandler<GlobalKeyboardHookEventArgs> KeyboardPressed;
 
-        public GlobalKeyboardHook()
-        {
+        public GlobalKeyboardHook() {
             _windowsHookHandle = IntPtr.Zero;
             _user32LibraryHandle = IntPtr.Zero;
             _hookProc = LowLevelKeyboardProc; // we must keep alive _hookProc, because GC is not aware about SetWindowsHookEx behaviour.
 
             _user32LibraryHandle = LoadLibrary("User32");
-            if (_user32LibraryHandle == IntPtr.Zero)
-            {
+            if (_user32LibraryHandle == IntPtr.Zero) {
                 int errorCode = Marshal.GetLastWin32Error();
                 throw new Win32Exception(errorCode, $"Failed to load library 'User32.dll'. Error {errorCode}: {new Win32Exception(Marshal.GetLastWin32Error()).Message}.");
             }
 
             _windowsHookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, _hookProc, _user32LibraryHandle, 0);
-            if (_windowsHookHandle == IntPtr.Zero)
-            {
+            if (_windowsHookHandle == IntPtr.Zero) {
                 int errorCode = Marshal.GetLastWin32Error();
                 throw new Win32Exception(errorCode, $"Failed to adjust keyboard hooks for '{Process.GetCurrentProcess().ProcessName}'. Error {errorCode}: {new Win32Exception(Marshal.GetLastWin32Error()).Message}.");
             }
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
                 // because we can unhook only in the same thread, not in garbage collector thread
-                if (_windowsHookHandle != IntPtr.Zero)
-                {
-                    if (!UnhookWindowsHookEx(_windowsHookHandle))
-                    {
+                if (_windowsHookHandle != IntPtr.Zero) {
+                    if (!UnhookWindowsHookEx(_windowsHookHandle)) {
                         int errorCode = Marshal.GetLastWin32Error();
                         throw new Win32Exception(errorCode, $"Failed to remove keyboard hooks for '{Process.GetCurrentProcess().ProcessName}'. Error {errorCode}: {new Win32Exception(Marshal.GetLastWin32Error()).Message}.");
                     }
+
                     _windowsHookHandle = IntPtr.Zero;
 
                     // ReSharper disable once DelegateSubtraction
@@ -65,24 +53,22 @@ namespace PrecisionGazeMouse
                 }
             }
 
-            if (_user32LibraryHandle != IntPtr.Zero)
-            {
+            if (_user32LibraryHandle != IntPtr.Zero) {
                 if (!FreeLibrary(_user32LibraryHandle)) // reduces reference to library by 1.
                 {
                     int errorCode = Marshal.GetLastWin32Error();
                     throw new Win32Exception(errorCode, $"Failed to unload library 'User32.dll'. Error {errorCode}: {new Win32Exception(Marshal.GetLastWin32Error()).Message}.");
                 }
+
                 _user32LibraryHandle = IntPtr.Zero;
             }
         }
 
-        ~GlobalKeyboardHook()
-        {
+        ~GlobalKeyboardHook() {
             Dispose(false);
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -133,8 +119,7 @@ namespace PrecisionGazeMouse
         static extern IntPtr CallNextHookEx(IntPtr hHook, int code, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct LowLevelKeyboardInputEvent
-        {
+        public struct LowLevelKeyboardInputEvent {
             /// <summary>
             /// A virtual-key code. The code must be a value in the range 1 to 254.
             /// </summary>
@@ -164,8 +149,7 @@ namespace PrecisionGazeMouse
         public const int WH_KEYBOARD_LL = 13;
         //const int HC_ACTION = 0;
 
-        public enum KeyboardState
-        {
+        public enum KeyboardState {
             KeyDown = 0x0100,
             KeyUp = 0x0101,
             SysKeyDown = 0x0104,
@@ -173,6 +157,7 @@ namespace PrecisionGazeMouse
         }
 
         public const int VkSnapshot = 0x2c;
+
         //const int VkLwin = 0x5b;
         //const int VkRwin = 0x5c;
         //const int VkTab = 0x09;
@@ -181,13 +166,11 @@ namespace PrecisionGazeMouse
         const int KfAltdown = 0x2000;
         public const int LlkhfAltdown = (KfAltdown >> 8);
 
-        public IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam)
-        {
+        public IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam) {
             bool fEatKeyStroke = false;
 
             var wparamTyped = wParam.ToInt32();
-            if (Enum.IsDefined(typeof(KeyboardState), wparamTyped))
-            {
+            if (Enum.IsDefined(typeof(KeyboardState), wparamTyped)) {
                 object o = Marshal.PtrToStructure(lParam, typeof(LowLevelKeyboardInputEvent));
                 LowLevelKeyboardInputEvent p = (LowLevelKeyboardInputEvent)o;
 
