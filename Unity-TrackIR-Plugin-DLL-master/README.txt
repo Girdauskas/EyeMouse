@@ -1,1 +1,0 @@
-Cloned from https://github.com/medsouz/Unity-TrackIR-Plugin-DLL

@@ -9,7 +9,7 @@ using SimWinInput;
 using Tobii.Interaction;
 
 
-namespace TobiiApiTests {
+namespace EyeMouse {
     class Program {
         private static double _actualGazePointX;
         private static double _actualGazePointY;

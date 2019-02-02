@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0A0CDDD2-63DB-405D-B1AA-931A6083AA5B}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>TobiiApiTests</RootNamespace>
-    <AssemblyName>TobiiApiTests</AssemblyName>
+    <RootNamespace>EyeMouse</RootNamespace>
+    <AssemblyName>EyeMouse</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -32,6 +32,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>EyeMouse.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AxMouseManipulator, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
