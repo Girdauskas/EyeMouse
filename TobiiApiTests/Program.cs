@@ -1,6 +1,9 @@
-﻿using System;
+using System;
+using System.Drawing;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using AxMouseManipulator;
 using Gma.System.MouseKeyHook;
 using SimWinInput;
 using Tobii.Interaction;
@@ -20,6 +23,10 @@ namespace TobiiApiTests {
 
         private const Keys LeftMouseButtonHotkey = Keys.F2;
         private const Keys RightMouseButtonHotkey = Keys.F4;
+
+        private const Keys ScrollingModeHotkey = Keys.F1;
+        private static bool _isScrollingModeEnabled;
+        private static Point _scrollingModeStartPoint;
 
         static void Main(string[] a) {
             var host = new Host();
@@ -67,6 +74,19 @@ namespace TobiiApiTests {
 
                     args.Handled = true;
                 }
+
+                if (args.KeyCode == ScrollingModeHotkey) {
+                    if (_isScrollingModeEnabled == false) {
+                        _scrollingModeStartPoint = Control.MousePosition;
+                        _isScrollingModeEnabled = true;
+
+                        // Enabling eViacam.
+                        SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
+                        SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
+                    }
+
+                    args.Handled = true;
+                }
             };
 
             globalKeyboardMouseEvents.KeyUp += (sender, args) => {
@@ -101,7 +121,54 @@ namespace TobiiApiTests {
                         args.Handled = true;
                     }
                 }
+
+                if (args.KeyCode == ScrollingModeHotkey) {
+                    if (_isScrollingModeEnabled) {
+                        _isScrollingModeEnabled = false;
+
+                        // Disabling eViacam.
+                        SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
+                        SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
+                    }
+                }
             };
+
+
+            Task.Run(() => {
+                var sleepBetweenScrolls = 100;
+
+                while (true) {
+                    if (_isScrollingModeEnabled) {
+                        var deltaY = Control.MousePosition.Y - _scrollingModeStartPoint.Y;
+
+                        if (Math.Abs(deltaY) > 10) {
+                            sleepBetweenScrolls = 150;
+
+                            if (Math.Abs(deltaY) > 20) {
+                                sleepBetweenScrolls = 100;
+                            }
+
+                            if (Math.Abs(deltaY) > 100) {
+                                sleepBetweenScrolls = 50;
+                            }
+
+                            if (Math.Abs(deltaY) > 200) {
+                                sleepBetweenScrolls = 25;
+                            }
+
+                            if (deltaY > 0) {
+                                MouseManipulator.ScrollMouseWheelDown(1);
+                            } else {
+                                MouseManipulator.ScrollMouseWheelUp(1);
+                            }
+                        }
+                    } else {
+                        sleepBetweenScrolls = 100;
+                    }
+
+                    Thread.Sleep(sleepBetweenScrolls);
+                }
+            });
 
 
             //var keyboardHook = new Hook("test");
