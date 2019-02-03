@@ -33,8 +33,7 @@ namespace EyeMouse {
 
         private static PointD _previousHeadPosition;
         private static PointD _actualHeadPosition;
-        private static double _headMovementSpeed;
-        private static HeadSpeed _headMovementSpeedDescription;
+        private static PointD _deltaHeadPosition;
 
         private static readonly FifoMeanCalculator LeftEyeXFilter = new FifoMeanCalculator(3);
         private static readonly FifoMeanCalculator LeftEyeYFilter = new FifoMeanCalculator(3);
@@ -75,20 +74,20 @@ namespace EyeMouse {
                     _previousHeadPosition = _actualHeadPosition;
                     _actualHeadPosition = new PointD(LeftEyeXFilter.Mean, LeftEyeYFilter.Mean);
 
-                    var a = _previousHeadPosition.X - _actualHeadPosition.X;
-                    var b = _previousHeadPosition.Y - _actualHeadPosition.Y;
-                    _headMovementSpeed = Math.Sqrt(a * a + b * b);
+                    _deltaHeadPosition = new PointD(_previousHeadPosition.X - _actualHeadPosition.X, _actualHeadPosition.Y - _previousHeadPosition.Y);
 
+                    //var a = _previousHeadPosition.X - _actualHeadPosition.X;
+                    //var b = _previousHeadPosition.Y - _actualHeadPosition.Y;
+                    //_headMovementSpeed = Math.Sqrt(a * a + b * b);
+                    //if (_headMovementSpeed < 0.0001) {
+                    //    _headMovementSpeedDescription = HeadSpeed.Still;
+                    //} else if (_headMovementSpeed >= 0.0001 && _headMovementSpeed < 0.0003) {
+                    //    _headMovementSpeedDescription = HeadSpeed.Slow;
+                    //} else {
+                    //    _headMovementSpeedDescription = HeadSpeed.Fast;
+                    //}
 
-                    if (_headMovementSpeed < 0.0001) {
-                        _headMovementSpeedDescription = HeadSpeed.Still;
-                    } else if (_headMovementSpeed >= 0.0001 && _headMovementSpeed < 0.0003) {
-                        _headMovementSpeedDescription = HeadSpeed.Slow;
-                    } else {
-                        _headMovementSpeedDescription = HeadSpeed.Fast;
-                    }
-
-                    Console.WriteLine(_headMovementSpeedDescription);
+                    //Console.WriteLine(_headMovementSpeedDescription);
                 }
 
                 //  Console.WriteLine("Has Left eye position: {0}", eyePosition.HasLeftEyePosition);
@@ -246,25 +245,19 @@ namespace EyeMouse {
             Task.Run(() => {
                 while (true) {
                     if (_isActivationButtonPressed) {
-                        var deltaX = _headPositionOnceActivated.X - _actualHeadPosition.X;
-                        var deltaY = _actualHeadPosition.Y - _headPositionOnceActivated.Y;
+                        const double acceleration = 3d;
+                        const double xSensitivity = 3000d;
+                        const double ySensitivity = 3000d;
 
-                        //switch (_headMovementSpeedDescription) {
-                        //    case HeadSpeed.Still:
-                        //        _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 1000, _mouseStartPoint.Y + deltaY * 8000);
-                        //        break;
+                        if (Math.Abs(_deltaHeadPosition.X) > 0.00008) {
+                            var xAccelerationCoefficient = (Math.Abs(Math.Min(_deltaHeadPosition.X, 0.001)) * 500 + 1) * acceleration;
+                            _newMousePosition.X += _deltaHeadPosition.X * xSensitivity * xAccelerationCoefficient;
+                        }
 
-                        //    case HeadSpeed.Slow:
-                        //        _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 3000, _mouseStartPoint.Y + deltaY * 8000);
-                        //        break;
-
-                        //    case HeadSpeed.Fast:
-                        //        _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 8000, _mouseStartPoint.Y + deltaY * 8000);
-                        //        break;
-                        //}
-
-                        _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 8000, _mouseStartPoint.Y + deltaY * 8000);
-
+                        if (Math.Abs(_deltaHeadPosition.Y) > 0.00008) {
+                            var yAccelerationCoefficient = (Math.Abs(Math.Min(_deltaHeadPosition.Y, 0.001)) * 500 + 1) * acceleration;
+                            _newMousePosition.Y += _deltaHeadPosition.Y * ySensitivity * yAccelerationCoefficient;
+                        }
 
                         MoveMouse(_newMousePosition);
                     }
