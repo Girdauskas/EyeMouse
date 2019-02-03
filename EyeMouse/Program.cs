@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +17,10 @@ namespace EyeMouse {
         private static double _actualGazePointY;
 
         private static double _actualLeftEyeX;
+        private static FifoMeanCalculator _leftEyeXFilter = new FifoMeanCalculator(10);
+
         private static double _actualLeftEyeY;
+        private static FifoMeanCalculator _leftEyeYFilter = new FifoMeanCalculator(10);
 
         private static double _eyeXOnceActivated;
         private static double _eyeYOnceActivated;
@@ -48,10 +52,16 @@ namespace EyeMouse {
             });
 
             var eyePositionStream = host.Streams.CreateEyePositionStream(true);
+
+
+
             eyePositionStream.EyePosition(eyePosition => {
-                if (eyePosition.HasLeftEyePosition && eyePosition.HasRightEyePosition) {
-                    _actualLeftEyeX = eyePosition.LeftEyeNormalized.X;
-                    _actualLeftEyeY = eyePosition.LeftEyeNormalized.Y;
+                if (eyePosition.HasLeftEyePosition) {
+                    _leftEyeXFilter.AddValue(eyePosition.RightEyeNormalized.X);
+                    _leftEyeYFilter.AddValue(eyePosition.RightEyeNormalized.Y);
+
+                    _actualLeftEyeX = _leftEyeXFilter.Mean;
+                    _actualLeftEyeY = _leftEyeYFilter.Mean;
                 }
 
                 //  Console.WriteLine("Has Left eye position: {0}", eyePosition.HasLeftEyePosition);
@@ -214,10 +224,8 @@ namespace EyeMouse {
                         var deltaX = _eyeXOnceActivated - _actualLeftEyeX;
                         var deltaY = _actualLeftEyeY - _eyeYOnceActivated;
 
-                        _newMouseX = _mouseStartPoint.X + deltaX * 10000;
-                        _newMouseY = _mouseStartPoint.Y + deltaY * 10000;
-
-                        //Console.WriteLine(deltaX);
+                        _newMouseX = _mouseStartPoint.X + deltaX * 8000;
+                        _newMouseY = _mouseStartPoint.Y + deltaY * 8000;
 
                         MoveMouse((int)_newMouseX, (int)_newMouseY);
                     }
