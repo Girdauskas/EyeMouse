@@ -22,11 +22,20 @@ namespace EyeMouse {
         }
     }
 
+    enum HeadSpeed {
+        Still,
+        Slow,
+        Fast
+    }
 
     class Program {
         private static PointD _actualGazePosition;
 
+        private static PointD _previousHeadPosition;
         private static PointD _actualHeadPosition;
+        private static double _headMovementSpeed;
+        private static HeadSpeed _headMovementSpeedDescription;
+
         private static readonly FifoMeanCalculator LeftEyeXFilter = new FifoMeanCalculator(3);
         private static readonly FifoMeanCalculator LeftEyeYFilter = new FifoMeanCalculator(3);
 
@@ -48,7 +57,7 @@ namespace EyeMouse {
         private static bool _isScrollingModeEnabled;
         private static Point _scrollingModeStartPoint;
 
-        static void Main(string[] a) {
+        static void Main(string[] args2) {
             var host = new Host();
             var gazePointDataStream = host.Streams.CreateGazePointDataStream(GazePointDataMode.LightlyFiltered, true);
             gazePointDataStream.GazePoint((gazePointX, gazePointY, _) => {
@@ -63,7 +72,23 @@ namespace EyeMouse {
                     LeftEyeXFilter.AddValue(eyePosition.RightEyeNormalized.X);
                     LeftEyeYFilter.AddValue((eyePosition.RightEyeNormalized.Y + eyePosition.LeftEyeNormalized.Y) / 2);
 
+                    _previousHeadPosition = _actualHeadPosition;
                     _actualHeadPosition = new PointD(LeftEyeXFilter.Mean, LeftEyeYFilter.Mean);
+
+                    var a = _previousHeadPosition.X - _actualHeadPosition.X;
+                    var b = _previousHeadPosition.Y - _actualHeadPosition.Y;
+                    _headMovementSpeed = Math.Sqrt(a * a + b * b);
+
+
+                    if (_headMovementSpeed < 0.0001) {
+                        _headMovementSpeedDescription = HeadSpeed.Still;
+                    } else if (_headMovementSpeed >= 0.0001 && _headMovementSpeed < 0.0003) {
+                        _headMovementSpeedDescription = HeadSpeed.Slow;
+                    } else {
+                        _headMovementSpeedDescription = HeadSpeed.Fast;
+                    }
+
+                    Console.WriteLine(_headMovementSpeedDescription);
                 }
 
                 //  Console.WriteLine("Has Left eye position: {0}", eyePosition.HasLeftEyePosition);
@@ -224,7 +249,22 @@ namespace EyeMouse {
                         var deltaX = _headPositionOnceActivated.X - _actualHeadPosition.X;
                         var deltaY = _actualHeadPosition.Y - _headPositionOnceActivated.Y;
 
+                        //switch (_headMovementSpeedDescription) {
+                        //    case HeadSpeed.Still:
+                        //        _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 1000, _mouseStartPoint.Y + deltaY * 8000);
+                        //        break;
+
+                        //    case HeadSpeed.Slow:
+                        //        _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 3000, _mouseStartPoint.Y + deltaY * 8000);
+                        //        break;
+
+                        //    case HeadSpeed.Fast:
+                        //        _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 8000, _mouseStartPoint.Y + deltaY * 8000);
+                        //        break;
+                        //}
+
                         _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 8000, _mouseStartPoint.Y + deltaY * 8000);
+
 
                         MoveMouse(_newMousePosition);
                     }
