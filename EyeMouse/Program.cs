@@ -27,8 +27,8 @@ namespace EyeMouse {
         private static PointD _actualHeadPosition;
         private static PointD _deltaHeadPosition;
 
-        private static readonly FifoMeanCalculator LeftEyeXFilter = new FifoMeanCalculator(3);
-        private static readonly FifoMeanCalculator LeftEyeYFilter = new FifoMeanCalculator(3);
+        private static readonly FifoMeanCalculator HeadXPositionFilter = new FifoMeanCalculator(3);
+        private static readonly FifoMeanCalculator HeadYPositionFilter = new FifoMeanCalculator(3);
 
         private static PointD _newMousePosition;
 
@@ -43,7 +43,7 @@ namespace EyeMouse {
 
         private const Keys ScrollingModeHotkey = Keys.F1;
         private static bool _isScrollingModeEnabled;
-        private static Point _scrollingModeStartPoint;
+        private static PointD _scrollingModeStartPoint;
 
         static void Main(string[] args2) {
             var host = new Host();
@@ -56,11 +56,11 @@ namespace EyeMouse {
 
             eyePositionStream.EyePosition(eyePosition => {
                 if (eyePosition.HasLeftEyePosition && eyePosition.HasRightEyePosition) {
-                    LeftEyeXFilter.AddValue(eyePosition.RightEyeNormalized.X);
-                    LeftEyeYFilter.AddValue((eyePosition.RightEyeNormalized.Y + eyePosition.LeftEyeNormalized.Y) / 2);
+                    HeadXPositionFilter.AddValue(eyePosition.RightEyeNormalized.X);
+                    HeadYPositionFilter.AddValue((eyePosition.RightEyeNormalized.Y + eyePosition.LeftEyeNormalized.Y) / 2);
 
                     _previousHeadPosition = _actualHeadPosition;
-                    _actualHeadPosition = new PointD(LeftEyeXFilter.Mean, LeftEyeYFilter.Mean);
+                    _actualHeadPosition = new PointD(HeadXPositionFilter.Mean, HeadYPositionFilter.Mean);
 
                     _deltaHeadPosition = new PointD(_previousHeadPosition.X - _actualHeadPosition.X, _actualHeadPosition.Y - _previousHeadPosition.Y);
                 }
@@ -105,7 +105,7 @@ namespace EyeMouse {
 
                 if (args.KeyCode == ScrollingModeHotkey) {
                     if (_isScrollingModeEnabled == false) {
-                        _scrollingModeStartPoint = Cursor.Position;
+                        _scrollingModeStartPoint = _actualHeadPosition;
                         _isScrollingModeEnabled = true;
                     }
 
@@ -155,21 +155,24 @@ namespace EyeMouse {
 
                 while (true) {
                     if (_isScrollingModeEnabled) {
-                        var deltaY = Control.MousePosition.Y - _scrollingModeStartPoint.Y;
+                        var deltaY = _actualHeadPosition.Y - _scrollingModeStartPoint.Y;
 
-                        if (Math.Abs(deltaY) > 10) {
+                        if (Math.Abs(deltaY) > 0.001) {
                             sleepBetweenScrolls = 200;
 
-                            if (Math.Abs(deltaY) > 20) {
+                            if (Math.Abs(deltaY) > 0.003) {
                                 sleepBetweenScrolls = 150;
+                                Console.WriteLine("2");
                             }
 
-                            if (Math.Abs(deltaY) > 40) {
+                            if (Math.Abs(deltaY) > 0.005) {
                                 sleepBetweenScrolls = 100;
+                                Console.WriteLine("3");
                             }
 
-                            if (Math.Abs(deltaY) > 100) {
+                            if (Math.Abs(deltaY) > 0.007) {
                                 sleepBetweenScrolls = 25;
+                                Console.WriteLine("4");
                             }
 
                             if (deltaY > 0) {
@@ -204,10 +207,10 @@ namespace EyeMouse {
                         if (Math.Abs(deltaHeadPosition.X) > upperDeadband) deltaHeadPosition.X = Math.Sign(deltaHeadPosition.X) * upperDeadband;
                         if (Math.Abs(deltaHeadPosition.Y) > upperDeadband) deltaHeadPosition.Y = Math.Sign(deltaHeadPosition.Y) * upperDeadband;
 
-                        var xAccelerationCoefficient = Remap(Math.Abs(deltaHeadPosition.X), 0, upperDeadband, 1, acceleration);
+                        var xAccelerationCoefficient = Remap(Math.Abs(deltaHeadPosition.X), lowerDeadband, upperDeadband, 1, acceleration);
                         _newMousePosition.X += deltaHeadPosition.X * xSensitivity * xAccelerationCoefficient;
 
-                        var yAccelerationCoefficient = Remap(Math.Abs(deltaHeadPosition.Y), 0, upperDeadband, 1, acceleration);
+                        var yAccelerationCoefficient = Remap(Math.Abs(deltaHeadPosition.Y), lowerDeadband, upperDeadband, 1, acceleration);
                         _newMousePosition.Y += deltaHeadPosition.Y * ySensitivity * yAccelerationCoefficient;
 
                         MoveMouse(_newMousePosition);
