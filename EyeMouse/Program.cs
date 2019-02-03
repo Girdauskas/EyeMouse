@@ -35,11 +35,13 @@ namespace EyeMouse {
         private static bool _isActivationButtonPressed;
         private static bool _isLeftMouseButtonPressed;
         private static bool _isRightMouseButtonPressed;
+        private static bool _isMiddleMouseButtonPressed;
 
         private const Keys ActivationHotkey = Keys.F3;
 
         private const Keys LeftMouseButtonHotkey = Keys.F2;
         private const Keys RightMouseButtonHotkey = Keys.F4;
+        private const Keys MiddleMouseButtonHotkey = Keys.Scroll;
 
         private const Keys ScrollingModeHotkey = Keys.F1;
         private static bool _isScrollingModeEnabled;
@@ -111,6 +113,15 @@ namespace EyeMouse {
 
                     args.Handled = true;
                 }
+
+                if (args.KeyCode == MiddleMouseButtonHotkey) {
+                    if (_isMiddleMouseButtonPressed == false) {
+                        _isMiddleMouseButtonPressed = true;
+
+                        var currentMousePosition = Control.MousePosition;
+                        SimMouse.Act(SimMouse.Action.MiddleButtonDown, currentMousePosition.X, currentMousePosition.Y);
+                    }
+                }
             };
 
             globalKeyboardMouseEvents.KeyUp += (sender, args) => {
@@ -137,6 +148,17 @@ namespace EyeMouse {
 
                         var currentMousePosition = Control.MousePosition;
                         SimMouse.Act(SimMouse.Action.RightButtonUp, currentMousePosition.X, currentMousePosition.Y);
+
+                        args.Handled = true;
+                    }
+                }
+
+                if (args.KeyCode == MiddleMouseButtonHotkey) {
+                    if (_isMiddleMouseButtonPressed) {
+                        _isMiddleMouseButtonPressed = false;
+
+                        var currentMousePosition = Control.MousePosition;
+                        SimMouse.Act(SimMouse.Action.MiddleButtonUp, currentMousePosition.X, currentMousePosition.Y);
 
                         args.Handled = true;
                     }
