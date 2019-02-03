@@ -12,22 +12,27 @@ using Tobii.Interaction.Framework;
 
 
 namespace EyeMouse {
+    struct PointD {
+        public double X;
+        public double Y;
+
+        public PointD(double x, double y) {
+            X = x;
+            Y = y;
+        }
+    }
+
+
     class Program {
-        private static double _actualGazePointX;
-        private static double _actualGazePointY;
+        private static PointD _actualGazePosition;
 
-        private static double _actualLeftEyeX;
-        private static FifoMeanCalculator _leftEyeXFilter = new FifoMeanCalculator(10);
+        private static PointD _actualHeadPosition;
+        private static readonly FifoMeanCalculator LeftEyeXFilter = new FifoMeanCalculator(3);
+        private static readonly FifoMeanCalculator LeftEyeYFilter = new FifoMeanCalculator(3);
 
-        private static double _actualLeftEyeY;
-        private static FifoMeanCalculator _leftEyeYFilter = new FifoMeanCalculator(10);
-
-        private static double _eyeXOnceActivated;
-        private static double _eyeYOnceActivated;
-        private static Point _mouseStartPoint;
-        private static double _newMouseX;
-        private static double _newMouseY;
-
+        private static PointD _headPositionOnceActivated;
+        private static PointD _mouseStartPoint;
+        private static PointD _newMousePosition;
 
         private static bool _isActivationButtonPressed;
         private static bool _isLeftMouseButtonPressed;
@@ -47,21 +52,18 @@ namespace EyeMouse {
             var host = new Host();
             var gazePointDataStream = host.Streams.CreateGazePointDataStream(GazePointDataMode.LightlyFiltered, true);
             gazePointDataStream.GazePoint((gazePointX, gazePointY, _) => {
-                _actualGazePointX = gazePointX;
-                _actualGazePointY = gazePointY;
+                _actualGazePosition = new PointD(gazePointX, gazePointY);
             });
 
             var eyePositionStream = host.Streams.CreateEyePositionStream(true);
 
 
-
             eyePositionStream.EyePosition(eyePosition => {
-                if (eyePosition.HasLeftEyePosition) {
-                    _leftEyeXFilter.AddValue(eyePosition.RightEyeNormalized.X);
-                    _leftEyeYFilter.AddValue(eyePosition.RightEyeNormalized.Y);
+                if (eyePosition.HasLeftEyePosition && eyePosition.HasRightEyePosition) {
+                    LeftEyeXFilter.AddValue(eyePosition.RightEyeNormalized.X);
+                    LeftEyeYFilter.AddValue((eyePosition.RightEyeNormalized.Y + eyePosition.LeftEyeNormalized.Y) / 2);
 
-                    _actualLeftEyeX = _leftEyeXFilter.Mean;
-                    _actualLeftEyeY = _leftEyeYFilter.Mean;
+                    _actualHeadPosition = new PointD(LeftEyeXFilter.Mean, LeftEyeYFilter.Mean);
                 }
 
                 //  Console.WriteLine("Has Left eye position: {0}", eyePosition.HasLeftEyePosition);
@@ -79,14 +81,12 @@ namespace EyeMouse {
             globalKeyboardMouseEvents.KeyDown += (sender, args) => {
                 if (args.KeyCode == ActivationHotkey) {
                     if (_isActivationButtonPressed == false) {
-                        MoveMouse((int)_actualGazePointX, (int)_actualGazePointY);
+                        MoveMouse(_actualGazePosition);
 
-                        _eyeXOnceActivated = _actualLeftEyeX;
-                        _eyeYOnceActivated = _actualLeftEyeY;
+                        _headPositionOnceActivated = _actualHeadPosition;
 
-                        _mouseStartPoint = new Point((int)_actualGazePointX, (int)_actualGazePointY);
-                        _newMouseX = (int)_actualGazePointX;
-                        _newMouseY = (int)_actualGazePointY;
+                        _mouseStartPoint = new PointD(_actualGazePosition.X, _actualGazePosition.Y);
+                        _newMousePosition = _actualGazePosition;
 
                         _isActivationButtonPressed = true;
 
@@ -221,13 +221,12 @@ namespace EyeMouse {
             Task.Run(() => {
                 while (true) {
                     if (_isActivationButtonPressed) {
-                        var deltaX = _eyeXOnceActivated - _actualLeftEyeX;
-                        var deltaY = _actualLeftEyeY - _eyeYOnceActivated;
+                        var deltaX = _headPositionOnceActivated.X - _actualHeadPosition.X;
+                        var deltaY = _actualHeadPosition.Y - _headPositionOnceActivated.Y;
 
-                        _newMouseX = _mouseStartPoint.X + deltaX * 8000;
-                        _newMouseY = _mouseStartPoint.Y + deltaY * 8000;
+                        _newMousePosition = new PointD(_mouseStartPoint.X + deltaX * 8000, _mouseStartPoint.Y + deltaY * 8000);
 
-                        MoveMouse((int)_newMouseX, (int)_newMouseY);
+                        MoveMouse(_newMousePosition);
                     }
 
                     Thread.Sleep(16);
@@ -241,9 +240,9 @@ namespace EyeMouse {
 
         private static readonly object MouseMovingLock = new object();
 
-        private static void MoveMouse(int newX, int newY) {
+        private static void MoveMouse(PointD position) {
             lock (MouseMovingLock) {
-                SimMouse.Act(SimMouse.Action.MoveOnly, newX, newY);
+                SimMouse.Act(SimMouse.Action.MoveOnly, (int)position.X, (int)position.Y);
             }
         }
     }
