@@ -245,19 +245,25 @@ namespace EyeMouse {
             Task.Run(() => {
                 while (true) {
                     if (_isActivationButtonPressed) {
-                        const double acceleration = 3d;
-                        const double xSensitivity = 3000d;
-                        const double ySensitivity = 3000d;
+                        const double acceleration = 10d;
+                        const double xSensitivity = 5000d;
+                        const double ySensitivity = 5000d;
 
-                        if (Math.Abs(_deltaHeadPosition.X) > 0.00008) {
-                            var xAccelerationCoefficient = (Math.Abs(Math.Min(_deltaHeadPosition.X, 0.001)) * 500 + 1) * acceleration;
-                            _newMousePosition.X += _deltaHeadPosition.X * xSensitivity * xAccelerationCoefficient;
-                        }
+                        const double lowerDeadband = 0.00008;
+                        const double upperDeadband = 0.001;
 
-                        if (Math.Abs(_deltaHeadPosition.Y) > 0.00008) {
-                            var yAccelerationCoefficient = (Math.Abs(Math.Min(_deltaHeadPosition.Y, 0.001)) * 500 + 1) * acceleration;
-                            _newMousePosition.Y += _deltaHeadPosition.Y * ySensitivity * yAccelerationCoefficient;
-                        }
+                        var deltaHeadPosition = _deltaHeadPosition;
+
+                        if (Math.Abs(deltaHeadPosition.X) < lowerDeadband) deltaHeadPosition.X = 0;
+                        if (Math.Abs(deltaHeadPosition.Y) < lowerDeadband) deltaHeadPosition.Y = 0;
+                        if (Math.Abs(deltaHeadPosition.X) > upperDeadband) deltaHeadPosition.X = Math.Sign(deltaHeadPosition.X) * upperDeadband;
+                        if (Math.Abs(deltaHeadPosition.Y) > upperDeadband) deltaHeadPosition.Y = Math.Sign(deltaHeadPosition.Y) * upperDeadband;
+
+                        var xAccelerationCoefficient = Remap(Math.Abs(deltaHeadPosition.X), 0, upperDeadband, 1, acceleration);
+                        _newMousePosition.X += deltaHeadPosition.X * xSensitivity * xAccelerationCoefficient;
+
+                        var yAccelerationCoefficient = Remap(Math.Abs(deltaHeadPosition.Y), 0, upperDeadband, 1, acceleration);
+                        _newMousePosition.Y += deltaHeadPosition.Y * ySensitivity * yAccelerationCoefficient;
 
                         MoveMouse(_newMousePosition);
                     }
@@ -277,6 +283,10 @@ namespace EyeMouse {
             lock (MouseMovingLock) {
                 SimMouse.Act(SimMouse.Action.MoveOnly, (int)position.X, (int)position.Y);
             }
+        }
+
+        public static double Remap(double value, double from1, double to1, double from2, double to2) {
+            return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
         }
     }
 }
