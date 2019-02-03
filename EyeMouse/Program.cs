@@ -7,12 +7,23 @@ using AxMouseManipulator;
 using Gma.System.MouseKeyHook;
 using SimWinInput;
 using Tobii.Interaction;
+using Tobii.Interaction.Framework;
 
 
 namespace EyeMouse {
     class Program {
         private static double _actualGazePointX;
         private static double _actualGazePointY;
+
+        private static double _actualLeftEyeX;
+        private static double _actualLeftEyeY;
+
+        private static double _eyeXOnceActivated;
+        private static double _eyeYOnceActivated;
+        private static Point _mouseStartPoint;
+        private static double _newMouseX;
+        private static double _newMouseY;
+
 
         private static bool _isActivationButtonPressed;
         private static bool _isLeftMouseButtonPressed;
@@ -30,10 +41,27 @@ namespace EyeMouse {
 
         static void Main(string[] a) {
             var host = new Host();
-            var gazePointDataStream = host.Streams.CreateGazePointDataStream();
+            var gazePointDataStream = host.Streams.CreateGazePointDataStream(GazePointDataMode.LightlyFiltered, true);
             gazePointDataStream.GazePoint((gazePointX, gazePointY, _) => {
                 _actualGazePointX = gazePointX;
                 _actualGazePointY = gazePointY;
+            });
+
+            var eyePositionStream = host.Streams.CreateEyePositionStream(true);
+            eyePositionStream.EyePosition(eyePosition => {
+                if (eyePosition.HasLeftEyePosition && eyePosition.HasRightEyePosition) {
+                    _actualLeftEyeX = eyePosition.LeftEyeNormalized.X;
+                    _actualLeftEyeY = eyePosition.LeftEyeNormalized.Y;
+                }
+
+                //  Console.WriteLine("Has Left eye position: {0}", eyePosition.HasLeftEyePosition);
+                //Console.WriteLine("Left eye position: X:{0} Y:{1} Z:{2}", eyePosition.LeftEye.X, eyePosition.LeftEye.Y, eyePosition.LeftEye.Z);
+                //Console.WriteLine("Left eye position (normalized): X:{0} Y:{1} Z:{2}", eyePosition.LeftEyeNormalized.X, eyePosition.LeftEyeNormalized.Y, eyePosition.LeftEyeNormalized.Z);
+
+                //Console.WriteLine("Has Right eye position: {0}", eyePosition.HasRightEyePosition);
+                //Console.WriteLine("Right eye position: X:{0} Y:{1} Z:{2}", eyePosition.RightEye.X, eyePosition.RightEye.Y, eyePosition.RightEye.Z);
+                //Console.WriteLine("Right eye position (normalized): X:{0} Y:{1} Z:{2}", eyePosition.RightEyeNormalized.X, eyePosition.RightEyeNormalized.Y, eyePosition.RightEyeNormalized.Z);
+                //Console.WriteLine();
             });
 
             var globalKeyboardMouseEvents = Hook.GlobalEvents();
@@ -41,13 +69,20 @@ namespace EyeMouse {
             globalKeyboardMouseEvents.KeyDown += (sender, args) => {
                 if (args.KeyCode == ActivationHotkey) {
                     if (_isActivationButtonPressed == false) {
+                        MoveMouse((int)_actualGazePointX, (int)_actualGazePointY);
+
+                        _eyeXOnceActivated = _actualLeftEyeX;
+                        _eyeYOnceActivated = _actualLeftEyeY;
+
+                        _mouseStartPoint = new Point((int)_actualGazePointX, (int)_actualGazePointY);
+                        _newMouseX = (int)_actualGazePointX;
+                        _newMouseY = (int)_actualGazePointY;
+
                         _isActivationButtonPressed = true;
 
-                        SimMouse.Act(SimMouse.Action.MoveOnly, (int)_actualGazePointX, (int)_actualGazePointY);
-
                         // Enabling eViacam.
-                        SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
-                        SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
+                        //SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
+                        //SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
                     }
 
                     args.Handled = true;
@@ -83,8 +118,8 @@ namespace EyeMouse {
                         _isScrollingModeEnabled = true;
 
                         // Enabling eViacam.
-                        SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
-                        SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
+                        //SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
+                        //SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
                     }
 
                     args.Handled = true;
@@ -96,8 +131,8 @@ namespace EyeMouse {
                     _isActivationButtonPressed = false;
 
                     // Disabling eViacam.
-                    SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
-                    SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
+                    //  SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
+                    //  SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
 
                     args.Handled = true;
                 }
@@ -129,8 +164,8 @@ namespace EyeMouse {
                         _isScrollingModeEnabled = false;
 
                         // Disabling eViacam.
-                        SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
-                        SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
+                        // SimKeyboard.KeyDown((byte)EViacamEnableDisableKey);
+                        //SimKeyboard.KeyUp((byte)EViacamEnableDisableKey);
                     }
                 }
             };
@@ -172,7 +207,36 @@ namespace EyeMouse {
                 }
             });
 
+
+            Task.Run(() => {
+                while (true) {
+                    if (_isActivationButtonPressed) {
+                        var deltaX = _eyeXOnceActivated - _actualLeftEyeX;
+                        var deltaY = _actualLeftEyeY - _eyeYOnceActivated;
+
+                        _newMouseX = _mouseStartPoint.X + deltaX * 10000;
+                        _newMouseY = _mouseStartPoint.Y + deltaY * 10000;
+
+                        //Console.WriteLine(deltaX);
+
+                        MoveMouse((int)_newMouseX, (int)_newMouseY);
+                    }
+
+                    Thread.Sleep(16);
+                }
+            });
+
+
             Application.Run();
+        }
+
+
+        private static readonly object MouseMovingLock = new object();
+
+        private static void MoveMouse(int newX, int newY) {
+            lock (MouseMovingLock) {
+                SimMouse.Act(SimMouse.Action.MoveOnly, newX, newY);
+            }
         }
     }
 }
