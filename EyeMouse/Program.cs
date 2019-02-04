@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Input;
 using AxMouseManipulator;
 using Gma.System.MouseKeyHook;
 using SimWinInput;
@@ -37,13 +38,19 @@ namespace EyeMouse {
         private static bool _isRightMouseButtonPressed;
         private static bool _isMiddleMouseButtonPressed;
 
-        private const Keys ActivationHotkey = Keys.F3;
+        private const Keys ActivationHotkey = Keys.CapsLock;
 
-        private const Keys LeftMouseButtonHotkey = Keys.F2;
-        private const Keys RightMouseButtonHotkey = Keys.F4;
-        private const Keys MiddleMouseButtonHotkey = Keys.Scroll;
+        private const Keys LeftMouseButtonHotkey = Keys.J;
+        private const Keys LeftMouseButtonAlternativeHotkey = Keys.Left;
 
-        private const Keys ScrollingModeHotkey = Keys.F1;
+        private const Keys RightMouseButtonHotkey = Keys.K;
+        private const Keys RightMouseButtonAlternativeHotkey = Keys.Right;
+
+        private const Keys MiddleMouseButtonHotkey = Keys.Up;
+        private const Keys MiddleMouseButtonAlternativeHotkey = Keys.I;
+
+
+        private const Keys ScrollingModeHotkey = Keys.RMenu;
         private static bool _isScrollingModeEnabled;
         private static PointD _scrollingModeStartPoint;
 
@@ -83,18 +90,21 @@ namespace EyeMouse {
                     args.Handled = true;
                 }
 
-                if (args.KeyCode == LeftMouseButtonHotkey) {
-                    if (_isLeftMouseButtonPressed == false) {
+                if ((args.KeyCode == LeftMouseButtonHotkey) || (args.KeyCode == LeftMouseButtonAlternativeHotkey)) {
+                    if (_isLeftMouseButtonPressed == false && _isActivationButtonPressed) {
                         _isLeftMouseButtonPressed = true;
 
                         var currentMousePosition = Control.MousePosition;
                         SimMouse.Act(SimMouse.Action.LeftButtonDown, currentMousePosition.X, currentMousePosition.Y);
+                        args.Handled = true;
                     }
 
-                    args.Handled = true;
+                    if (_isLeftMouseButtonPressed) {
+                        args.Handled = true;
+                    }
                 }
 
-                if (args.KeyCode == RightMouseButtonHotkey) {
+                if (((args.KeyCode == RightMouseButtonHotkey) || (args.KeyCode == RightMouseButtonAlternativeHotkey)) && _isActivationButtonPressed) {
                     if (_isRightMouseButtonPressed == false) {
                         _isRightMouseButtonPressed = true;
 
@@ -105,7 +115,7 @@ namespace EyeMouse {
                     args.Handled = true;
                 }
 
-                if (args.KeyCode == ScrollingModeHotkey) {
+                if ((args.KeyCode == ScrollingModeHotkey)) {
                     if (_isScrollingModeEnabled == false) {
                         _scrollingModeStartPoint = _actualHeadPosition;
                         _isScrollingModeEnabled = true;
@@ -114,7 +124,7 @@ namespace EyeMouse {
                     args.Handled = true;
                 }
 
-                if (args.KeyCode == MiddleMouseButtonHotkey) {
+                if (((args.KeyCode == MiddleMouseButtonHotkey) || (args.KeyCode == MiddleMouseButtonAlternativeHotkey)) && _isActivationButtonPressed) {
                     if (_isMiddleMouseButtonPressed == false) {
                         _isMiddleMouseButtonPressed = true;
 
@@ -131,42 +141,50 @@ namespace EyeMouse {
                     args.Handled = true;
                 }
 
-                if (args.KeyCode == LeftMouseButtonHotkey) {
+                if (args.KeyCode == LeftMouseButtonHotkey || args.KeyCode == LeftMouseButtonAlternativeHotkey) {
                     if (_isLeftMouseButtonPressed) {
                         _isLeftMouseButtonPressed = false;
 
                         var currentMousePosition = Control.MousePosition;
                         SimMouse.Act(SimMouse.Action.LeftButtonUp, currentMousePosition.X, currentMousePosition.Y);
 
-                        args.Handled = true;
+                        if (_isActivationButtonPressed) {
+                            args.Handled = true;
+                        }
                     }
                 }
 
-                if (args.KeyCode == RightMouseButtonHotkey) {
+                if (args.KeyCode == RightMouseButtonHotkey || args.KeyCode == RightMouseButtonAlternativeHotkey) {
                     if (_isRightMouseButtonPressed) {
                         _isRightMouseButtonPressed = false;
 
                         var currentMousePosition = Control.MousePosition;
                         SimMouse.Act(SimMouse.Action.RightButtonUp, currentMousePosition.X, currentMousePosition.Y);
 
-                        args.Handled = true;
+                        if (_isActivationButtonPressed) {
+                            args.Handled = true;
+                        }
                     }
                 }
 
-                if (args.KeyCode == MiddleMouseButtonHotkey) {
+                if (args.KeyCode == MiddleMouseButtonHotkey || args.KeyCode == MiddleMouseButtonAlternativeHotkey) {
                     if (_isMiddleMouseButtonPressed) {
                         _isMiddleMouseButtonPressed = false;
 
                         var currentMousePosition = Control.MousePosition;
                         SimMouse.Act(SimMouse.Action.MiddleButtonUp, currentMousePosition.X, currentMousePosition.Y);
 
-                        args.Handled = true;
+                        if (_isActivationButtonPressed) {
+                            args.Handled = true;
+                        }
                     }
                 }
 
                 if (args.KeyCode == ScrollingModeHotkey) {
                     if (_isScrollingModeEnabled) {
                         _isScrollingModeEnabled = false;
+
+                        args.Handled = true;
                     }
                 }
             };
@@ -184,17 +202,17 @@ namespace EyeMouse {
 
                             if (Math.Abs(deltaY) > 0.003) {
                                 sleepBetweenScrolls = 150;
-                                Console.WriteLine("2");
+                                //Console.WriteLine("2");
                             }
 
                             if (Math.Abs(deltaY) > 0.005) {
                                 sleepBetweenScrolls = 100;
-                                Console.WriteLine("3");
+                                //Console.WriteLine("3");
                             }
 
                             if (Math.Abs(deltaY) > 0.007) {
                                 sleepBetweenScrolls = 25;
-                                Console.WriteLine("4");
+                                //Console.WriteLine("4");
                             }
 
                             if (deltaY > 0) {
@@ -219,7 +237,7 @@ namespace EyeMouse {
                         const double xSensitivity = 5000d;
                         const double ySensitivity = 5000d;
 
-                        const double lowerDeadband = 0.00005;
+                        const double lowerDeadband = 0.000085;
                         const double upperDeadband = 0.001;
 
                         var deltaHeadPosition = _deltaHeadPosition;
