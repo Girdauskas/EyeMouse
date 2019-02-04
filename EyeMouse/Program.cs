@@ -98,6 +98,7 @@ namespace EyeMouse {
                 }
 
                 if (_isActivationButtonPressed && (args.KeyCode != ActivationHotkey) && (args.KeyCode != AlternativeActivationModifier)) {
+                    Console.WriteLine("Any");
                     _isAnyClicksPerformedDuringActivation = true;
                 }
 
@@ -149,11 +150,12 @@ namespace EyeMouse {
                 if (args.KeyCode == ActivationHotkey) {
                     _isActivationButtonPressed = false;
 
-                    if (_isAnyClicksPerformedDuringActivation == false) {
+                    if ((_isAnyClicksPerformedDuringActivation == false) && (_isLeftMouseButtonPressed == false)) {
                         var currentMousePosition = Control.MousePosition;
                         if (_isAlternativeActivation) {
                             SimMouse.Click(MouseButtons.Right, currentMousePosition.X, currentMousePosition.Y);
                         } else {
+                            Console.WriteLine("Click");
                             SimMouse.Click(MouseButtons.Left, currentMousePosition.X, currentMousePosition.Y);
                         }
                     }
