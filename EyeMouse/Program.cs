@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,14 +41,12 @@ namespace EyeMouse {
 
         private const Keys ActivationHotkey = Keys.CapsLock;
 
-        private const Keys LeftMouseButtonHotkey = Keys.J;
-        private const Keys LeftMouseButtonAlternativeHotkey = Keys.Left;
+        private static bool _isAnyClicksPerformedDuringActivation = false;
 
-        private const Keys RightMouseButtonHotkey = Keys.K;
-        private const Keys RightMouseButtonAlternativeHotkey = Keys.Right;
 
-        private const Keys MiddleMouseButtonHotkey = Keys.Up;
-        private const Keys MiddleMouseButtonAlternativeHotkey = Keys.I;
+        private static List<Keys> LeftMouseButtonHotkeys = new List<Keys>() { Keys.J, Keys.Left, Keys.Space };
+        private static List<Keys> RightMouseButtonHotkeys = new List<Keys>() { Keys.Right, Keys.K };
+        private static List<Keys> MiddleMouseButtonHotkeys = new List<Keys>() { Keys.Up, Keys.I };
 
 
         private const Keys ScrollingModeHotkey = Keys.RMenu;
@@ -90,7 +89,11 @@ namespace EyeMouse {
                     args.Handled = true;
                 }
 
-                if ((args.KeyCode == LeftMouseButtonHotkey) || (args.KeyCode == LeftMouseButtonAlternativeHotkey)) {
+                if (_isActivationButtonPressed && (args.KeyCode != ActivationHotkey)) {
+                    _isAnyClicksPerformedDuringActivation = true;
+                }
+
+                if (LeftMouseButtonHotkeys.Contains(args.KeyCode)) {
                     if (_isLeftMouseButtonPressed == false && _isActivationButtonPressed) {
                         _isLeftMouseButtonPressed = true;
 
@@ -104,7 +107,7 @@ namespace EyeMouse {
                     }
                 }
 
-                if (((args.KeyCode == RightMouseButtonHotkey) || (args.KeyCode == RightMouseButtonAlternativeHotkey)) && _isActivationButtonPressed) {
+                if (RightMouseButtonHotkeys.Contains(args.KeyCode) && _isActivationButtonPressed) {
                     if (_isRightMouseButtonPressed == false) {
                         _isRightMouseButtonPressed = true;
 
@@ -124,7 +127,7 @@ namespace EyeMouse {
                     args.Handled = true;
                 }
 
-                if (((args.KeyCode == MiddleMouseButtonHotkey) || (args.KeyCode == MiddleMouseButtonAlternativeHotkey)) && _isActivationButtonPressed) {
+                if (MiddleMouseButtonHotkeys.Contains(args.KeyCode) && _isActivationButtonPressed) {
                     if (_isMiddleMouseButtonPressed == false) {
                         _isMiddleMouseButtonPressed = true;
 
@@ -138,10 +141,19 @@ namespace EyeMouse {
                 if (args.KeyCode == ActivationHotkey) {
                     _isActivationButtonPressed = false;
 
+                    if (_isAnyClicksPerformedDuringActivation == false) {
+                        var currentMousePosition = Control.MousePosition;
+                        SimMouse.Click(MouseButtons.Left, currentMousePosition.X, currentMousePosition.Y);
+                    } else {
+                        Console.WriteLine("Bybis");
+                    }
+
+                    _isAnyClicksPerformedDuringActivation = false;
+
                     args.Handled = true;
                 }
 
-                if (args.KeyCode == LeftMouseButtonHotkey || args.KeyCode == LeftMouseButtonAlternativeHotkey) {
+                if (LeftMouseButtonHotkeys.Contains(args.KeyCode)) {
                     if (_isLeftMouseButtonPressed) {
                         _isLeftMouseButtonPressed = false;
 
@@ -154,7 +166,7 @@ namespace EyeMouse {
                     }
                 }
 
-                if (args.KeyCode == RightMouseButtonHotkey || args.KeyCode == RightMouseButtonAlternativeHotkey) {
+                if (RightMouseButtonHotkeys.Contains(args.KeyCode)) {
                     if (_isRightMouseButtonPressed) {
                         _isRightMouseButtonPressed = false;
 
@@ -167,7 +179,7 @@ namespace EyeMouse {
                     }
                 }
 
-                if (args.KeyCode == MiddleMouseButtonHotkey || args.KeyCode == MiddleMouseButtonAlternativeHotkey) {
+                if (MiddleMouseButtonHotkeys.Contains(args.KeyCode)) {
                     if (_isMiddleMouseButtonPressed) {
                         _isMiddleMouseButtonPressed = false;
 
