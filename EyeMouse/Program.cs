@@ -51,7 +51,9 @@ namespace EyeMouse {
 
 
         private const Keys ScrollingModeHotkey = Keys.RMenu;
-        private static bool _isScrollingModeEnabled;
+        private static bool _isVertiaclScrollingModeEnabled;
+        private static bool _isHorizontalScrollingModeEnabled;
+
         private static PointD _scrollingModeStartPoint;
 
         static void Main(string[] args2) {
@@ -126,15 +128,28 @@ namespace EyeMouse {
                     args.Handled = true;
                 }
 
-                if ((args.KeyCode == ScrollingModeHotkey)) {
-                    if (_isScrollingModeEnabled == false) {
+                if ((args.KeyCode == ScrollingModeHotkey) && args.Shift == false) {
+                    if (_isVertiaclScrollingModeEnabled == false) {
                         _scrollingModeStartPoint = _actualHeadPosition;
-                        _isScrollingModeEnabled = true;
+                        _isVertiaclScrollingModeEnabled = true;
                     }
 
                     args.Handled = true;
                     Console.WriteLine("Scroll");
                 }
+
+                if (args.KeyCode == ScrollingModeHotkey && args.Shift) {
+                    if (_isHorizontalScrollingModeEnabled == false) {
+                        _scrollingModeStartPoint = _actualHeadPosition;
+                        _isHorizontalScrollingModeEnabled = true;
+                    }
+
+                    _isVertiaclScrollingModeEnabled = false;
+
+                    args.Handled = true;
+                    Console.WriteLine("Horizontal scroll");
+                }
+
 
                 if (MiddleMouseButtonHotkeys.Contains(args.KeyCode) && _isActivationButtonPressed) {
                     if (_isMiddleMouseButtonPressed == false) {
@@ -209,8 +224,14 @@ namespace EyeMouse {
                 }
 
                 if (args.KeyCode == ScrollingModeHotkey) {
-                    if (_isScrollingModeEnabled) {
-                        _isScrollingModeEnabled = false;
+                    if (_isVertiaclScrollingModeEnabled) {
+                        _isVertiaclScrollingModeEnabled = false;
+                        
+                        args.Handled = true;
+                    }
+
+                    if (_isHorizontalScrollingModeEnabled) {
+                        _isHorizontalScrollingModeEnabled = false;
 
                         args.Handled = true;
                     }
@@ -222,7 +243,7 @@ namespace EyeMouse {
                 var sleepBetweenScrolls = 100;
 
                 while (true) {
-                    if (_isScrollingModeEnabled) {
+                    if (_isVertiaclScrollingModeEnabled) {
                         var deltaY = _actualHeadPosition.Y - _scrollingModeStartPoint.Y;
 
                         if (Math.Abs(deltaY) > 0.001) {
@@ -263,13 +284,13 @@ namespace EyeMouse {
                 var sleepBetweenScrolls = 100;
 
                 while (true) {
-                    if (_isScrollingModeEnabled) {
+                    if (_isHorizontalScrollingModeEnabled) {
                         var deltaX = _actualHeadPosition.X - _scrollingModeStartPoint.X;
 
-                        if (Math.Abs(deltaX) > 0.002) {
+                        if (Math.Abs(deltaX) > 0.001) {
                             sleepBetweenScrolls = 200;
 
-                            if (Math.Abs(deltaX) > 0.004) {
+                            if (Math.Abs(deltaX) > 0.003) {
                                 sleepBetweenScrolls = 150;
                                 //Console.WriteLine("2");
                             }
