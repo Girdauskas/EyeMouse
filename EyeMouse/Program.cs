@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Input;
 using AxMouseManipulator;
 using Gma.System.MouseKeyHook;
 using SimWinInput;
@@ -93,6 +91,7 @@ namespace EyeMouse {
                 }
 
                 if (args.KeyCode == AlternativeActivationModifier && _isActivationButtonPressed) {
+                    Console.WriteLine("Alternative mode");
                     _isAlternativeActivation = true;
                     args.Handled = true;
                 }
@@ -134,6 +133,7 @@ namespace EyeMouse {
                     }
 
                     args.Handled = true;
+                    Console.WriteLine("Scroll");
                 }
 
                 if (MiddleMouseButtonHotkeys.Contains(args.KeyCode) && _isActivationButtonPressed) {
@@ -143,6 +143,8 @@ namespace EyeMouse {
                         var currentMousePosition = Control.MousePosition;
                         SimMouse.Act(SimMouse.Action.MiddleButtonDown, currentMousePosition.X, currentMousePosition.Y);
                     }
+
+                    args.Handled = true;
                 }
             };
 
@@ -153,6 +155,7 @@ namespace EyeMouse {
                     if ((_isAnyClicksPerformedDuringActivation == false) && (_isLeftMouseButtonPressed == false)) {
                         var currentMousePosition = Control.MousePosition;
                         if (_isAlternativeActivation) {
+                            Console.WriteLine("Right click");
                             SimMouse.Click(MouseButtons.Right, currentMousePosition.X, currentMousePosition.Y);
                         } else {
                             Console.WriteLine("Click");
@@ -214,7 +217,7 @@ namespace EyeMouse {
                 }
             };
 
-
+            // Up/down scrolling.
             Task.Run(() => {
                 var sleepBetweenScrolls = 100;
 
@@ -244,6 +247,47 @@ namespace EyeMouse {
                                 MouseManipulator.ScrollMouseWheelDown(1);
                             } else {
                                 MouseManipulator.ScrollMouseWheelUp(1);
+                            }
+                        }
+                    } else {
+                        sleepBetweenScrolls = 100;
+                    }
+
+                    Thread.Sleep(sleepBetweenScrolls);
+                }
+            });
+
+
+            // Left/right scrolling.
+            Task.Run(() => {
+                var sleepBetweenScrolls = 100;
+
+                while (true) {
+                    if (_isScrollingModeEnabled) {
+                        var deltaX = _actualHeadPosition.X - _scrollingModeStartPoint.X;
+
+                        if (Math.Abs(deltaX) > 0.002) {
+                            sleepBetweenScrolls = 200;
+
+                            if (Math.Abs(deltaX) > 0.004) {
+                                sleepBetweenScrolls = 150;
+                                //Console.WriteLine("2");
+                            }
+
+                            if (Math.Abs(deltaX) > 0.005) {
+                                sleepBetweenScrolls = 100;
+                                //Console.WriteLine("3");
+                            }
+
+                            if (Math.Abs(deltaX) > 0.007) {
+                                sleepBetweenScrolls = 25;
+                                //Console.WriteLine("4");
+                            }
+
+                            if (deltaX > 0) {
+                                InteropMouse.mouse_event(0x1000, 0, 0, -1 * 120, 0);
+                            } else {
+                                InteropMouse.mouse_event(0x1000, 0, 0, 1 * 120, 0);
                             }
                         }
                     } else {
