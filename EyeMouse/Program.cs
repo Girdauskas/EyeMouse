@@ -27,8 +27,8 @@ namespace EyeMouse {
         private static PointD _actualHeadPosition;
         private static PointD _deltaHeadPosition;
 
-        private static readonly FifoMeanCalculator HeadXPositionFilter = new FifoMeanCalculator(3);
-        private static readonly FifoMeanCalculator HeadYPositionFilter = new FifoMeanCalculator(3);
+        private static readonly FifoMeanCalculator HeadXPositionFilter = new FifoMeanCalculator(10);
+        private static readonly FifoMeanCalculator HeadYPositionFilter = new FifoMeanCalculator(10);
 
         private static PointD _newMousePosition;
 
@@ -323,11 +323,11 @@ namespace EyeMouse {
             Task.Run(() => {
                 while (true) {
                     if (_isActivationButtonPressed) {
-                        const double acceleration = 8d;
+                        const double acceleration = 7d;
                         const double xSensitivity = 5000d;
                         const double ySensitivity = 5000d;
 
-                        const double lowerDeadband = 0.000085;
+                        const double lowerDeadband = 0.00002;
                         const double upperDeadband = 0.001;
 
                         var deltaHeadPosition = _deltaHeadPosition;

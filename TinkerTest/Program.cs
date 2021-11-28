@@ -23,8 +23,8 @@ namespace ConsoleApp6 {
         private static double _normalizedX;
         private static double _normalizedY;
 
-        private static FifoMeanCalculator _normalizedXFilter = new FifoMeanCalculator(50);
-        private static FifoMeanCalculator _normalizedYFilter = new FifoMeanCalculator(50);
+        private static FifoMeanCalculator _normalizedXFilter = new FifoMeanCalculator(25);
+        private static FifoMeanCalculator _normalizedYFilter = new FifoMeanCalculator(25);
 
 
         static void Main(string[] args) {
