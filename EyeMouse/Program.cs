@@ -298,19 +298,16 @@ namespace EyeMouse
                             if (Math.Abs(deltaY) > 0.003)
                             {
                                 sleepBetweenScrolls = 150;
-                                //Console.WriteLine("2");
                             }
 
                             if (Math.Abs(deltaY) > 0.005)
                             {
                                 sleepBetweenScrolls = 100;
-                                //Console.WriteLine("3");
                             }
 
                             if (Math.Abs(deltaY) > 0.007)
                             {
                                 sleepBetweenScrolls = 25;
-                                //Console.WriteLine("4");
                             }
 
                             if (deltaY > 0)
@@ -332,7 +329,6 @@ namespace EyeMouse
                 }
             });
 
-
             // Left/right scrolling.
             Task.Run(() =>
             {
@@ -351,19 +347,16 @@ namespace EyeMouse
                             if (Math.Abs(deltaX) > 0.003)
                             {
                                 sleepBetweenScrolls = 150;
-                                //Console.WriteLine("2");
                             }
 
                             if (Math.Abs(deltaX) > 0.005)
                             {
                                 sleepBetweenScrolls = 100;
-                                //Console.WriteLine("3");
                             }
 
                             if (Math.Abs(deltaX) > 0.007)
                             {
                                 sleepBetweenScrolls = 25;
-                                //Console.WriteLine("4");
                             }
 
                             if (deltaX > 0)
@@ -384,7 +377,6 @@ namespace EyeMouse
                     Thread.Sleep(sleepBetweenScrolls);
                 }
             });
-
 
             Task.Run(() =>
             {
