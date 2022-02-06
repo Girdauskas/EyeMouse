@@ -4,7 +4,7 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EyeMouse", "EyeMouse\EyeMouse.csproj", "{0A0CDDD2-63DB-405D-B1AA-931A6083AA5B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmguTest", "EmguTest\EmguTest.csproj", "{4AE41126-8CCD-4DB0-A96A-C837D51ECD3A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinkerTest", "TinkerTest\TinkerTest.csproj", "{33290D81-3E54-4D6C-8C10-5519431FF440}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,10 +16,10 @@ Global
 		{0A0CDDD2-63DB-405D-B1AA-931A6083AA5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A0CDDD2-63DB-405D-B1AA-931A6083AA5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A0CDDD2-63DB-405D-B1AA-931A6083AA5B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4AE41126-8CCD-4DB0-A96A-C837D51ECD3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4AE41126-8CCD-4DB0-A96A-C837D51ECD3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4AE41126-8CCD-4DB0-A96A-C837D51ECD3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4AE41126-8CCD-4DB0-A96A-C837D51ECD3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33290D81-3E54-4D6C-8C10-5519431FF440}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33290D81-3E54-4D6C-8C10-5519431FF440}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33290D81-3E54-4D6C-8C10-5519431FF440}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33290D81-3E54-4D6C-8C10-5519431FF440}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
